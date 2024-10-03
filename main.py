@@ -30,7 +30,7 @@ async def main():
         for i in range(5):
             await asyncio.sleep(5)
             data = await get_runtime_data(True) # Change to False to not print runtime data
-            lcdmanager.write_lines(["Connected!", "Production: " + str(data.get("ppv", 0)) + "W", "Export: " + str(data.get("active_power", 0)) + "W", "House: " + str(data.get("house_consumption:", 0)) + "W"])
+            lcdmanager.write_lines(["Connected!", "Production: " + str(data.get("ppv", 0)) + "W", "Export: " + str(data.get("active_power", 0)) + "W", "House: " + str(data.get("house_consumption", 0)) + "W"])
 
 
 
