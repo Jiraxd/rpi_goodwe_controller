@@ -27,7 +27,7 @@ async def main():
             return
         data = await inverter.read_runtime_data()
         print(data)
-        lcdmanager.write_lines(["Connected!", "Production: " + data.get("ppv", 0), "Export: " + data.get("active_power", 0), "House: " + data.get("house_consumption:", 0) + "W"])
+        lcdmanager.write_lines(["Connected!", "Production: " + str(data.get("ppv", 0)) + "W", "Export: " + str(data.get("active_power", 0)) + "W", "House: " + str(data.get("house_consumption:", 0)) + "W"])
 
 
 

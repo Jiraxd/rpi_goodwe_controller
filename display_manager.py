@@ -11,12 +11,13 @@ class LCDManager:
         await asyncio.sleep(1)
         self.lcd.clear()
         self.lcd.write_string("Connecting...")
-        self.lcd.lf()
+        self.lcd.crlf()
         self.lcd.write_string("Inverter IP:")
+        self.lcd.crlf()
         self.lcd.write_string(_ip)
     
     def write_lines(self, text: List[str]):
         self.lcd.clear()
         for line in text:
             self.lcd.write_string(line)
-            self.lcd.lf()
+            self.lcd.crlf()
