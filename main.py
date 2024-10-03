@@ -25,9 +25,12 @@ async def main():
         if(failed):
             lcdmanager.write_lines(["Failed to connect!","Script disabled!"])
             return
-        data = await inverter.read_runtime_data()
-        print(data)
-        lcdmanager.write_lines(["Connected!", "Production: " + str(data.get("ppv", 0)) + "W", "Export: " + str(data.get("active_power", 0)) + "W", "House: " + str(data.get("house_consumption:", 0)) + "W"])
+        
+        # Temporary loop for testing
+        for i in range(5):
+            await asyncio.sleep(5)
+            data = await get_runtime_data(True) # Change to False to not print runtime data
+            lcdmanager.write_lines(["Connected!", "Production: " + str(data.get("ppv", 0)) + "W", "Export: " + str(data.get("active_power", 0)) + "W", "House: " + str(data.get("house_consumption:", 0)) + "W"])
 
 
 
@@ -46,13 +49,14 @@ async def try_connection():
 
     return False
 
-async def print_runtime_data():
+async def get_runtime_data(printData = False):
     
     runtime_data = await inverter.read_runtime_data()
-    
-    for sensor in inverter.sensors():
-        if sensor.id_ in runtime_data:
-            print(f"{sensor.id_}: \t\t {sensor.name} = {runtime_data[sensor.id_]} {sensor.unit}")
+    if(printData):
+        for sensor in inverter.sensors():
+            if sensor.id_ in runtime_data:
+                print(f"{sensor.id_}: \t\t {sensor.name} = {runtime_data[sensor.id_]} {sensor.unit}")
+    return runtime_data
 
 
 asyncio.run(main())
