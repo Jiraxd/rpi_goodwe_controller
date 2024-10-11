@@ -4,6 +4,7 @@ import utils
 from display_manager import LCDManager
 from crons import CronManager
 from types import SimpleNamespace
+from logger import LoggerCustom
 
 
 # Maybe better way to store config?
@@ -19,13 +20,21 @@ lcdmanager : LCDManager = None
 
 cronManager : CronManager = None
 
+logManager : LoggerCustom = None
+
 offlineMode = False # Set to True for testing purposes without connection to goodwe inverter
 
 
 async def main():
-    global lcdmanager, cronManager
+    global lcdmanager, cronManager, logManager
+
+    logManager = LoggerCustom()
+    logManager.log("Initializing managers")
+
     lcdmanager = LCDManager(20, 4)
     cronManager = CronManager()
+    
+    logManager.log("Managers initialized")
     
     await lcdmanager.write_init_message(config.ip_address)
 
