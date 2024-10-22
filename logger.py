@@ -19,6 +19,7 @@ class LoggerCustom:
 
     def log(self, text:str, level:int = 20):
         self.logger.log(level, text)
+        print(text)
 
     
 
