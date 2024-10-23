@@ -1,6 +1,7 @@
 import asyncio
 import goodwe
 import utils
+from datetime import datetime, timedelta
 from display_manager import LCDManager
 from crons import CronManager
 from types import SimpleNamespace
@@ -12,7 +13,7 @@ config = SimpleNamespace(
     max_export=5000,
     min_battery_charge_for_water_heating = 75, # percentage
     min_solar_output_for_water_heating = 1500, # minimum solar output to start heating water
-    
+    min_minutes_before_deactivate_limit = 30
 )
 
 
@@ -23,6 +24,8 @@ lcdmanager : LCDManager = None
 cronManager : CronManager = None
 
 logManager : LoggerCustom = None
+
+lastActivateLimit = datetime.now() - timedelta(minutes=30)
 
 offlineMode = False # Set to True for testing purposes without connection to goodwe inverter
 
@@ -96,12 +99,20 @@ async def get_data():
 
 async def check_grid_limit(data):
     export = data.get("active_power", 0)
+    enabled = await inverter.read_setting("grid_export")
     if(export > config.max_export):
+        
+        if(enabled == 1): 
+            return
         logManager.log("Turning on grid limit")
         utils.enable_grid_limit(inverter)
     else:
-        logManager.log("Turning off grid limit")
-        utils.disable_grid_limit(inverter)
+        if(datetime.now - lastActivateLimit > timedelta(minutes=config.min_minutes_before_deactivate_limit)):
+            if(enabled == 0): 
+                return
+            lastActivateLimit = datetime.now()
+            logManager.log("Turning off grid limit")
+            utils.disable_grid_limit(inverter)
 
 async def check_water_heating(data):
     
