@@ -30,6 +30,12 @@ lastActivateLimit = datetime.now() - timedelta(minutes=30)
 offlineMode = False # Set to True for testing purposes without connection to goodwe inverter
 
 
+# sensors
+# ppv - current production in W
+# battery_soc - current battery in %
+# house_consumption - current house consumption in W
+# active_power - current export in W, if - value, importing from grid, if + value, exporting to grid
+
 async def main():
     global lcdmanager, cronManager, logManager
 
@@ -115,7 +121,15 @@ async def check_grid_limit(data):
             utils.disable_grid_limit(inverter)
 
 async def check_water_heating(data):
+    if(config.min_battery_charge_for_water_heating < data.get("battery_soc", 0)):
+        logManager.log("Water heating could not start, battery too low!")
+        return
+    if(config.min_solar_output_for_water_heating < data.get("ppv", 0)):
+        logManager.log("Water heating could not start, power generation too low!")
+        # stop water heating ?
+        return
     
+    # water heating wifi outlet api request
     pass
 
     
