@@ -6,14 +6,19 @@ from display_manager import LCDManager
 from crons import CronManager
 from types import SimpleNamespace
 from logger import LoggerCustom
+from tapo_client import TapoClient
+
+
 
 
 config = SimpleNamespace(
     ip_address='192.168.0.114',
+    tapo_ip_address="192.168.0.106",
     max_export=5000,
     min_battery_charge_for_water_heating = 75, # percentage
     min_solar_output_for_water_heating = 1500, # minimum solar output to start heating water
-    min_minutes_before_deactivate_limit = 30
+    min_minutes_before_deactivate_limit = 30,
+    min_minutes_activation_time_tapo = 30
 )
 
 
@@ -25,9 +30,15 @@ cronManager : CronManager = None
 
 logManager : LoggerCustom = None
 
+tapoClient : TapoClient = None  
+
 lastActivateLimit = datetime.now() - timedelta(minutes=30)
 
+lastActivateLimitTapo = datetime.now() - timedelta(minutes=config.min_minutes_activation_time_tapo)
+
 offlineMode = False # Set to True for testing purposes without connection to goodwe inverter
+
+
 
 
 # sensors
@@ -37,13 +48,14 @@ offlineMode = False # Set to True for testing purposes without connection to goo
 # active_power - current export in W, if - value, importing from grid, if + value, exporting to grid
 
 async def main():
-    global lcdmanager, cronManager, logManager
+    global lcdmanager, cronManager, logManager, tapoClient
 
     logManager = LoggerCustom()
     logManager.log("Initializing managers")
 
     lcdmanager = LCDManager(20, 4)
     cronManager = CronManager()
+    tapoClient = TapoClient()
     
     logManager.log("Managers initialized")
     
@@ -120,17 +132,27 @@ async def check_grid_limit(data):
             logManager.log("Turning off grid limit")
             utils.disable_grid_limit(inverter)
 
+
+
 async def check_water_heating(data):
+    # temp device info
+    tapoClient.print_device_info()
+
     if(config.min_battery_charge_for_water_heating < data.get("battery_soc", 0)):
         logManager.log("Water heating could not start, battery too low!")
         return
     if(config.min_solar_output_for_water_heating < data.get("ppv", 0)):
-        logManager.log("Water heating could not start, power generation too low!")
-        # stop water heating ?
+
+        # check if device is online from device info
+        if(datetime.now - lastActivateLimitTapo > timedelta(minutes=config.min_minutes_activation_time_tapo)):
+            logManager.log("Water heating could not start, power generation too low!")
+        
+        # stop water heating after X MINUTES after start config.min_minutes_activation_time_tapo
         return
     
-    # water heating wifi outlet api request
-    pass
+    tapoClient.start_device()
+    lastActivateLimitTapo = datetime.now()
+    logManager.log("Starting water heating via TapoClient")
 
     
 
