@@ -25,6 +25,13 @@ class CronManager:
         check_water_heating(data)
         logManager.log("Cron checkWaterHeating() finished runinng!")
         
+    @pycron.cron("*/5 * * * * *")
+    async def checkPrice():
+        logManager.log("Running cron checkPrice()")
+        # TODO stop selling electricity if price is too low
+
+        logManager.log("Cron checkPrice() finished runinng!")
+        
 
     
     

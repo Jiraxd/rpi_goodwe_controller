@@ -36,5 +36,5 @@ class TapoClient:
 
     async def check_is_active(self):
         # TODO
-        pass
+        return False
 

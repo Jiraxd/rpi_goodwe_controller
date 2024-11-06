@@ -16,9 +16,10 @@ config = SimpleNamespace(
     tapo_ip_address="192.168.0.106",
     max_export=5000,
     min_battery_charge_for_water_heating = 75, # percentage
-    min_solar_output_for_water_heating = 1500, # minimum solar output to start heating water
+    min_solar_output_for_water_heating = 2500, # minimum solar output to start heating water
     min_minutes_before_deactivate_limit = 30,
-    min_minutes_activation_time_tapo = 30
+    min_minutes_activation_time_tapo = 120,
+    max_minutes_activation_time_tapo = 200
 )
 
 
@@ -137,17 +138,35 @@ async def check_grid_limit(data):
 async def check_water_heating(data):
     # temp device info
     tapoClient.print_device_info()
-
+    
+    active = tapoClient.check_is_active()
+    
+    if(active):
+        if(datetime.now - lastActivateLimitTapo > timedelta(minutes=config.max_minutes_activation_time_tapo)):
+            tapoClient.stop_device()
+            logManager.log("Stopping water heating via TapoClient due to exceeding the max activation limit")
+            return
+    
     if(config.min_battery_charge_for_water_heating < data.get("battery_soc", 0)):
-        logManager.log("Water heating could not start, battery too low!")
+        if(active):
+            if(datetime.now - lastActivateLimitTapo < timedelta(minutes=config.min_minutes_activation_time_tapo)):
+                logManager.log("Water heating cannot be stopped, it hasn't been minimum amount yet!")
+                return
+            tapoClient.stop_device()
+            logManager.log("Water heating stopped because batteries are too low!")
+        else:
+            logManager.log("Water heating could not start, battery too low!")
         return
     if(config.min_solar_output_for_water_heating < data.get("ppv", 0)):
 
-        # check if device is online from device info
-        if(datetime.now - lastActivateLimitTapo > timedelta(minutes=config.min_minutes_activation_time_tapo)):
-            logManager.log("Water heating could not start, power generation too low!")
-        
-        # stop water heating after X MINUTES after start config.min_minutes_activation_time_tapo
+        if(active):
+            if(datetime.now - lastActivateLimitTapo < timedelta(minutes=config.min_minutes_activation_time_tapo)):
+                logManager.log("Water heating cannot be stopped, it hasn't been minimum amount yet!")
+                return
+            tapoClient.stop_device()
+            logManager.log("Water heating stopped because power generation is too low!")
+        else:
+            logManager.log("Water heating could not start, power generation is too low!")
         return
     
     tapoClient.start_device()
