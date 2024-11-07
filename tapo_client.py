@@ -1,10 +1,7 @@
-import tapo
+from tapo import ApiClient
 import os
 from main import config, logManager
 import asyncio
-
-
-# pip install python-dotenv
 
 # pip install tapo
 
@@ -16,7 +13,7 @@ class TapoClient:
         logManager.log("TapoClient successfully initialized")
     
     async def init_device(self):
-        self.device = await client.p110(config.tapo_ip_address)
+        self.device = await self.client.p110(config.tapo_ip_address)
         device_info = await self.device.get_device_info()
 
         logManager.log(f"Tapo startup info: {device_info.to_dict()}")
