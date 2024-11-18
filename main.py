@@ -8,7 +8,9 @@ from types import SimpleNamespace
 from logger import LoggerCustom
 from tapo_client import TapoClient
 from api_client import ApiClient
+from dotenv import load_dotenv
 
+load_dotenv()
 
 
 

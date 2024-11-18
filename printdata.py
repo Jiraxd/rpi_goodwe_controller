@@ -2,7 +2,9 @@ import goodwe
 import asyncio
 from tapo import ApiClient
 import os
+from dotenv import load_dotenv
 
+load_dotenv()
 
 
 ## test to read current data from inverter and print data from tapo device
@@ -21,14 +23,15 @@ async def getData():
     
     
 async def printDataTAPO():
-    tapo = ApiClient(os.getenv("TAPO_USERNAME"), os.getenv("TAPO_PASS"))
-    device_info = await tapo.get_device_info()
+    client = ApiClient(os.getenv("TAPO_USERNAME"), os.getenv("TAPO_PASS"), 5)
+    device = await client.p110("192.168.0.106")
+    device_info = await device.get_device_info()
     print(f"Device info: {device_info.to_dict()}")
 
-    device_usage = await tapo.get_device_usage()
+    device_usage = await device.get_device_usage()
     print(f"Device usage: {device_usage.to_dict()}")
     
                 
                 
-asyncio.run(getData())
+# asyncio.run(getData())
 asyncio.run(printDataTAPO())
