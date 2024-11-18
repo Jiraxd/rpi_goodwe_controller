@@ -5,8 +5,13 @@ import asyncio
 
 # pip install tapo
 
+# .env file required
+# TAPO_USERNAME=your_tapo_username
+# TAPO_PASS=your_tapo_password
+
 class TapoClient:
     def __init__(self):
+
 
         self.client = ApiClient(os.getenv("TAPO_USERNAME"), os.getenv("TAPO_PASS"))
         asyncio.run(self.init_device())

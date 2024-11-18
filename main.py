@@ -7,6 +7,7 @@ from crons import CronManager
 from types import SimpleNamespace
 from logger import LoggerCustom
 from tapo_client import TapoClient
+from api_client import ApiClient
 
 
 
@@ -15,6 +16,7 @@ config = SimpleNamespace(
     ip_address='192.168.0.114',
     tapo_ip_address="192.168.0.106",
     max_export=5000,
+    max_export_set=5400,
     min_battery_charge_for_water_heating = 75, # percentage
     min_solar_output_for_water_heating = 2500, # minimum solar output to start heating water
     min_minutes_before_deactivate_limit = 30,
@@ -33,6 +35,8 @@ logManager : LoggerCustom = None
 
 tapoClient : TapoClient = None  
 
+apiClient : ApiClient = None
+
 lastActivateLimit = datetime.now() - timedelta(minutes=30)
 
 lastActivateLimitTapo = datetime.now() - timedelta(minutes=config.min_minutes_activation_time_tapo)
@@ -49,7 +53,7 @@ offlineMode = False # Set to True for testing purposes without connection to goo
 # active_power - current export in W, if - value, importing from grid, if + value, exporting to grid
 
 async def main():
-    global lcdmanager, cronManager, logManager, tapoClient
+    global lcdmanager, cronManager, logManager, tapoClient, apiClient
 
     logManager = LoggerCustom()
     logManager.log("Initializing managers")
@@ -57,6 +61,7 @@ async def main():
     lcdmanager = LCDManager(20, 4)
     cronManager = CronManager()
     tapoClient = TapoClient()
+    apiClient = ApiClient()
     
     logManager.log("Managers initialized")
     
@@ -90,12 +95,7 @@ async def try_connection():
     return False
 
 async def check_limit_disabled_on_init():
-    enabled = await inverter.read_setting("grid_export")
-    if(enabled == 1):
-        logManager.log("Grid limit is already enabled!")
-    else:
-        utils.enable_grid_limit(inverter)
-        logManager.log("Grid limit enabled on startup!")
+    utils.set_grid_limit(inverter, config.max_export_set)
 
 async def get_runtime_data(printData = False):
     
@@ -118,20 +118,18 @@ async def get_data():
 
 async def check_grid_limit(data):
     export = data.get("active_power", 0)
-    enabled = await inverter.read_setting("grid_export")
+    enabled = await inverter.read_setting("grid_export_limit")
     if(export > config.max_export):
         
-        if(enabled == 1): 
-            return
         logManager.log("Turning on grid limit")
-        utils.enable_grid_limit(inverter)
+        utils.set_grid_limit(inverter, config.max_export_set)
     else:
         if(datetime.now - lastActivateLimit > timedelta(minutes=config.min_minutes_before_deactivate_limit)):
             if(enabled == 0): 
                 return
             lastActivateLimit = datetime.now()
             logManager.log("Turning off grid limit")
-            utils.disable_grid_limit(inverter)
+            utils.set_grid_limit(inverter, 0)
 
 
 
@@ -172,6 +170,13 @@ async def check_water_heating(data):
     tapoClient.start_device()
     lastActivateLimitTapo = datetime.now()
     logManager.log("Starting water heating via TapoClient")
+
+async def check_price_and_disable_enable_sell():
+    priceJSON = apiClient.get_electricity_price()
+    calculatedPrice = int(priceJSON["priceCZK"]) / 1000
+    logManager.log("Current price : " + calculatedPrice)
+
+
 
     
 
