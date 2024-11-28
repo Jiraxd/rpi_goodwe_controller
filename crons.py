@@ -3,9 +3,9 @@ from decorators import error_handler
 from logger import LoggerCustom
 
 class CronManager:
-    def __init__(self, logManager: LoggerCustom, controller):
-        self.logManager = logManager
-        self.controller = controller
+    def __init__(self, _logManager: LoggerCustom, _controller):
+        self.logManager = _logManager
+        self.controller = _controller
         self.logManager.log("CronManager loaded!")
         
     def start(self):
