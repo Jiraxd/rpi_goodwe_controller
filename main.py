@@ -161,14 +161,8 @@ async def main():
     except Exception as e:
         print(f"Error in initialize: {str(e)}")
         print(traceback.format_exc())
-
-    while True:
-        try:
-            await asyncio.sleep(1)
-        except Exception as e:
-            print(f"Error in main loop: {str(e)}")
-            print(traceback.format_exc())
-            await asyncio.sleep(2)  
+        
+    print("ended ?")
 
 if __name__ == "__main__":
     asyncio.run(main())

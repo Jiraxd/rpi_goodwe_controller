@@ -3,16 +3,17 @@ import traceback
 from logger import LoggerCustom
 import asyncio
 
+
 def error_handler(func):
-    """Decorator to catch and log errors without crashing"""
     @functools.wraps(func)
-    async def async_wrapper(self, *args, **kwargs):
+    async def async_wrapper(*args, **kwargs):
         try:
             if asyncio.iscoroutinefunction(func):
-                return await func(self, *args, **kwargs)
-            return func(self, *args, **kwargs)
+                return await func(*args, **kwargs)
+            return func(*args, **kwargs)
         except Exception as e:
-            # Get logger from self if available, otherwise create new one
+            # Get logger from first argument (self) if available
+            self = args[0] if args else None
             logger = getattr(self, 'logManager', None)
             if not logger:
                 logger = LoggerCustom()
