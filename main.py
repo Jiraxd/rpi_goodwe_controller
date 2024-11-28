@@ -1,4 +1,6 @@
 import asyncio
+import sys
+import traceback
 import goodwe
 import utils
 from datetime import datetime, timedelta
@@ -149,8 +151,31 @@ class MainController:
         self.logManager.log(f"Current price : {calculatedPrice}")
 
 async def main():
-    controller = MainController()
-    await controller.initialize()
+    controller = MainController() 
+    try:
+        await controller.initialize()
+    except Exception as e:
+        print(f"Error in initialize: {str(e)}")
+        print(traceback.format_exc())
+
+    while True:
+        try:
+            await asyncio.sleep(1)
+        except Exception as e:
+            print(f"Error in main loop: {str(e)}")
+            print(traceback.format_exc())
+            await asyncio.sleep(2)  
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    while True:
+        try:
+            asyncio.run(main())
+        except KeyboardInterrupt:
+            print("\nShutting down gracefully...")
+            sys.exit(0)
+        except Exception as e:
+            print(f"\nFatal error occurred: {str(e)}")
+            print("\nTraceback:")
+            print(traceback.format_exc())
+            print("\nRestarting main loop...")
+            asyncio.sleep(3)
