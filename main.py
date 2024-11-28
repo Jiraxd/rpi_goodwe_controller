@@ -2,6 +2,7 @@ import asyncio
 import sys
 import traceback
 import goodwe
+from decorators import error_handler
 import utils
 from datetime import datetime, timedelta
 from display_manager import LCDManager 
@@ -42,6 +43,7 @@ class MainController:
         self.apiClient = ApiClient(self.logManager)
         self.cronManager = CronManager(self.logManager, self)
 
+
         await self.tapoClient.init_device(config)
         
         self.logManager.log("Managers initialized")
@@ -71,9 +73,11 @@ class MainController:
                 await asyncio.sleep(5)
         return False
 
+    @error_handler
     async def check_limit_disabled_on_init(self):
         await utils.set_grid_limit(self.inverter, config.max_export_set, self.logManager)
 
+    @error_handler
     async def get_runtime_data(self, printData = False):
         runtime_data = await self.inverter.read_runtime_data()
         if(printData):

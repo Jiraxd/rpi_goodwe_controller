@@ -1,6 +1,7 @@
 from tapo import ApiClient
 import os
 
+from decorators import error_handler
 from logger import LoggerCustom
 
 class TapoClient:
@@ -9,7 +10,7 @@ class TapoClient:
         self.client = ApiClient(os.getenv("TAPO_USERNAME"), os.getenv("TAPO_PASS"))
         self.device = None
 
-
+    @error_handler
     async def init_device(self, config):
         """Initialize the device asynchronously."""
         self.device = await self.client.p110(config.tapo_ip_address)

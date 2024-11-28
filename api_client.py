@@ -1,5 +1,6 @@
 from apiclient import APIClient
 
+from decorators import error_handler
 from logger import LoggerCustom
 
 class ApiClient(APIClient):
@@ -9,6 +10,7 @@ class ApiClient(APIClient):
         self.logManager.log("ApiClient loaded!")
         pass
 
+    @error_handler
     def get_electricity_price(self):
         url = "https://spotovaelektrina.cz/api/v1/price/get-actual-price-json"
         return self.get(url)
