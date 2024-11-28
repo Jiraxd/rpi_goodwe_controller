@@ -3,17 +3,15 @@ import traceback
 from logger import LoggerCustom
 import asyncio
 
-
 def error_handler(func):
     @functools.wraps(func)
     async def async_wrapper(*args, **kwargs):
+        self = args[0] if args else None
         try:
             if asyncio.iscoroutinefunction(func):
                 return await func(*args, **kwargs)
             return func(*args, **kwargs)
         except Exception as e:
-            # Get logger from first argument (self) if available
-            self = args[0] if args else None
             logger = getattr(self, 'logManager', None)
             if not logger:
                 logger = LoggerCustom()
