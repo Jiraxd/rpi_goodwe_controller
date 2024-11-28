@@ -3,32 +3,38 @@ import asyncio
 from decorators import error_handler
 from datetime import datetime
 
+logManager = None
+controller = None
+
 class CronManager:
     def __init__(self, _logManager, _controller):
-        self.logManager = _logManager
-        self.controller = _controller
-        self.loop = asyncio.get_event_loop()
-        self.logManager.log("CronManager loaded!")
+        global logManager, controller
+        logManager = _logManager
+        controller = _controller
+        logManager.log("CronManager loaded!")
         
     def start(self):
         pycron.start()
+    
 
-    @pycron.cron("* * * * * */15") 
-    async def getDataAndWriteToLCD(self, timestamp: datetime):  
-        self.logManager.log("Running cron getDataAndWriteToLCD()")
-        data = await self.controller.get_data_and_write_to_lcd()
-        await self.controller.check_grid_limit(data)
-        self.logManager.log("Cron getDataAndWriteToLCD() finished running!")
 
-    @pycron.cron("* * * * * */30")
-    async def checkWaterHeating(self, timestamp: datetime):  
-        self.logManager.log("Running cron checkWaterHeating()")
-        data = await self.controller.get_data()
-        await self.controller.check_water_heating(data)
-        self.logManager.log("Cron checkWaterHeating() finished running!")
+
+@pycron.cron("* * * * * */15") 
+async def getDataAndWriteToLCD(timestamp: datetime):  
+    logManager.log("Running cron getDataAndWriteToLCD()")
+    data = await controller.get_data_and_write_to_lcd()
+    await controller.check_grid_limit(data)
+    logManager.log("Cron getDataAndWriteToLCD() finished running!")
+
+@pycron.cron("* * * * * */30")
+async def checkWaterHeating(timestamp: datetime):  
+    logManager.log("Running cron checkWaterHeating()")
+    data = await controller.get_data()
+    await controller.check_water_heating(data)
+    logManager.log("Cron checkWaterHeating() finished running!")
         
-    @pycron.cron("* * * * * */60")
-    async def checkPrice(self, timestamp: datetime):
-        self.logManager.log("Running cron checkPrice()")
-        await self.controller.check_price_and_disable_enable_sell()
-        self.logManager.log("Cron checkPrice() finished running!")
+@pycron.cron("* * * * * */60")
+async def checkPrice(timestamp: datetime):
+    logManager.log("Running cron checkPrice()")
+    await controller.check_price_and_disable_enable_sell()
+    logManager.log("Cron checkPrice() finished running!")
