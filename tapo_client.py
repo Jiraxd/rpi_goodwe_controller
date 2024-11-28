@@ -24,9 +24,13 @@ class TapoClient:
         logManager.log(f"Tapo startup info: {device_info.to_dict()}")
 
     async def start_device(self):
+        logManager.log("Starting Tapo device")
+        return
         await self.device.on()
 
     async def stop_device(self):
+        logManager.log("Stopping Tapo device")
+        return
         await self.device.off()
 
     async def print_device_info(self):
