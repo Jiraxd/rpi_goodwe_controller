@@ -1,10 +1,12 @@
-from main import logManager
 from apiclient import APIClient
+
+from logger import LoggerCustom
 
 class ApiClient(APIClient):
 
-    def __init__(self):
-        logManager.log("ApiClient loaded!")
+    def __init__(self, logManager: LoggerCustom):
+        self.logManager = logManager
+        self.logManager.log("ApiClient loaded!")
         pass
 
     def get_electricity_price(self):
