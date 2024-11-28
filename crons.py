@@ -13,7 +13,7 @@ class CronManager:
     def start(self):
         pycron.start()
 
-    @pycron.cron("*/15 * * * * *")
+    @pycron.cron("* * * * * */15")
     @error_handler  
     async def getDataAndWriteToLCD(self, timestamp: datetime):  
         self.logManager.log("Running cron getDataAndWriteToLCD()")
@@ -21,7 +21,7 @@ class CronManager:
         await self.controller.check_grid_limit(data)
         self.logManager.log("Cron getDataAndWriteToLCD() finished running!")
 
-    @pycron.cron("*/30 * * * * *")
+    @pycron.cron("* * * * * */30")
     @error_handler  
     async def checkWaterHeating(self, timestamp: datetime):  
         self.logManager.log("Running cron checkWaterHeating()")
@@ -29,7 +29,7 @@ class CronManager:
         await self.controller.check_water_heating(data)
         self.logManager.log("Cron checkWaterHeating() finished running!")
         
-    @pycron.cron("*/60 * * * * *")
+    @pycron.cron("* * * * * */60")
     @error_handler
     async def checkPrice(self, timestamp: datetime):
         self.logManager.log("Running cron checkPrice()")
