@@ -1,4 +1,5 @@
 import pycron
+import asyncio
 from decorators import error_handler
 from functools import partial
 
@@ -6,12 +7,24 @@ class CronManager:
     def __init__(self, _logManager, _controller):
         self.logManager = _logManager
         self.controller = _controller
+        self.loop = asyncio.get_event_loop()
         self.logManager.log("CronManager loaded!")
         
     def start(self):
-        pycron.add_job("* * * * * */15", partial(self.getDataAndWriteToLCD))
-        pycron.add_job("* * * * * */30", partial(self.checkWaterHeating))
-        pycron.add_job("* * * * * */60", partial(self.checkPrice))
+        
+        # Create wrapper functions that schedule coroutines in the existing event loop, pycron is passing DATETIME so we need to wrap it
+        def lcd_wrapper(dt):
+            return self.loop.create_task(self.getDataAndWriteToLCD())
+            
+        def heating_wrapper(dt):
+            return self.loop.create_task(self.checkWaterHeating())
+            
+        def price_wrapper(dt):
+            return self.loop.create_task(self.checkPrice())
+
+        pycron.add_job("* * * * * */15", lcd_wrapper)
+        pycron.add_job("* * * * * */30", heating_wrapper)
+        pycron.add_job("* * * * * */60", price_wrapper)
         pycron.start()
 
     @error_handler  
