@@ -9,5 +9,6 @@ config = SimpleNamespace(
     min_solar_output_for_water_heating=2500,
     min_minutes_before_deactivate_limit=30,
     min_minutes_activation_time_tapo=120,
-    max_minutes_activation_time_tapo=200
+    max_minutes_activation_time_tapo=200,
+    min_minutes_between_gridexport_switch=5
 )

@@ -1,4 +1,5 @@
 import asyncio
+import json
 import sys
 import traceback
 import goodwe
@@ -32,6 +33,7 @@ class MainController:
         self.apiClient = None
         self.lastActivateLimit = datetime.now() - timedelta(minutes=30)
         self.lastActivateLimitTapo = datetime.now() - timedelta(minutes=config.min_minutes_activation_time_tapo)
+        self.lastSwitchGridExport = datetime.now() - timedelta(minutes=config.min_minutes_between_gridexport_switch)
         self.offlineMode = False # Set to True for testing purposes without connection to goodwe inverter
         
     async def initialize(self):
@@ -75,7 +77,11 @@ class MainController:
 
     @error_handler
     async def check_limit_disabled_on_init(self):
-        await utils.set_grid_limit(self.inverter, config.max_export_set, self.logManager)
+        currentLimit = await self.inverter.read_setting("grid_export_limit")
+        if(currentLimit != config.max_export_set):
+            await utils.set_grid_limit(self.inverter, config.max_export_set, self.logManager)
+        
+
 
     @error_handler
     async def get_runtime_data(self, printData = False):
@@ -151,9 +157,25 @@ class MainController:
         self.logManager.log("Starting water heating via TapoClient")
 
     async def check_price_and_disable_enable_sell(self):
-        priceJSON = self.apiClient.get_electricity_price()
+        apiOutput = self.apiClient.get_electricity_price()
+        priceJSON = json.loads(apiOutput)
         calculatedPrice = int(priceJSON["priceCZK"]) / 1000
         self.logManager.log(f"Current price : {calculatedPrice}")
+
+        if(datetime.now() - self.lastSwitchGridExport < config.min_minutes_between_gridexport_switch):
+            self.logManager.log("Could not continue with price check, it hasnt been minimum amount of minutes yet")
+            return
+        self.lastSwitchGridExport = datetime.now()
+
+        if(calculatedPrice < 1):
+            self.logManager.log("Disabling grid export! - Price too low")
+            return
+            utils.disable_grid_export(self.inverter, self.logManager)
+        else:
+            self.logManager.log("Enabling grid export! - Price is higher than 1 CZK")
+            return
+            utils.enable_grid_export(self.inverter, self.logManager)
+
 
 async def main():
     controller = MainController() 
