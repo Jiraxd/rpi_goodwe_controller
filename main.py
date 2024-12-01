@@ -23,6 +23,11 @@ load_dotenv()
 # active_power - current export in W, if - value, importing from grid, if + value, exporting to grid
 
 
+# settings
+# grid_export_limit - limit of export to grid in W
+# grid_export - 1 - enables limiter, 0 - disables limiter
+
+
 class MainController:
     def __init__(self):
         self.inverter = None
@@ -79,7 +84,7 @@ class MainController:
     async def check_limit_disabled_on_init(self):
         currentLimit = await self.inverter.read_setting("grid_export_limit")
         if(currentLimit != config.max_export_set):
-            await utils.set_grid_limit(self.inverter, config.max_export_set, self.logManager)
+            await utils.enable_grid_limit(self.inverter, self.logManager)
         
 
 
@@ -107,17 +112,19 @@ class MainController:
 
     async def check_grid_limit(self, data):
         export = data.get("active_power", 0)
-        enabled = await self.inverter.read_setting("grid_export_limit")
+        enabled = await self.inverter.read_setting("grid_export")
         if(export > config.max_export):
             self.logManager.log("Turning on grid limit")
-            await utils.set_grid_limit(self.inverter, config.max_export_set, self.logManager)
+            return
+            await utils.enable_grid_limit(self.inverter, self.logManager)
         else:
             if(datetime.now() - self.lastActivateLimit > timedelta(minutes=config.min_minutes_before_deactivate_limit)):
                 if(enabled == 0): 
                     return
                 self.lastActivateLimit = datetime.now()
                 self.logManager.log("Turning off grid limit")
-                await utils.set_grid_limit(self.inverter, 0, self.logManager)
+                return
+                await utils.disable_grid_limit(self.inverter, self.logManager)
 
     async def check_water_heating(self, data):
         await self.tapoClient.print_device_info()

@@ -21,6 +21,12 @@ async def getData():
     
     print(settings)
     
+    limit = await inverter.read_setting("grid_export_limit")
+    setting = await inverter.read_setting("grid_export")
+    
+    print(limit)
+    print(setting)
+    
     
 async def printDataTAPO():
     client = ApiClient(os.getenv("TAPO_USERNAME"), os.getenv("TAPO_PASS"), 5)
@@ -34,4 +40,4 @@ async def printDataTAPO():
                 
                 
 # asyncio.run(getData())
-asyncio.run(printDataTAPO())
+asyncio.run(getData())
