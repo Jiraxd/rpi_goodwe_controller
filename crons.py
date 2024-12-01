@@ -15,6 +15,9 @@ class CronManager:
         
     def start(self):
         pycron.start()
+        
+    def stop(self):
+        pycron.stop()
     
 
 

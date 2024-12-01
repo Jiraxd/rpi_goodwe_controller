@@ -13,6 +13,8 @@ from tapo_client import TapoClient
 from api_client import ApiClient
 from config import config
 from dotenv import load_dotenv
+import signal
+import atexit
 
 load_dotenv()
 
@@ -27,6 +29,18 @@ load_dotenv()
 # grid_export_limit - limit of export to grid in W
 # grid_export - 1 - enables limiter, 0 - disables limiter
 
+async def cleanup():
+    # Close httpx client
+    if controller.apiClient:
+        await controller.apiClient.close()
+    
+    # Write close message
+    if controller.lcdmanager:
+        controller.lcdmanager.write_lines(["Shutting down..."])
+        
+    # Stop cron jobs
+    if controller.cronManager:
+        controller.cronManager.stop()
 
 class MainController:
     def __init__(self):
@@ -169,7 +183,7 @@ class MainController:
         calculatedPrice = int(priceJSON["priceCZK"]) / 1000
         self.logManager.log(f"Current price : {calculatedPrice}")
 
-        if(datetime.now() - self.lastSwitchGridExport < config.min_minutes_between_gridexport_switch):
+        if(datetime.now() - self.lastSwitchGridExport < timedelta(minutes=config.min_minutes_between_gridexport_switch)):
             self.logManager.log("Could not continue with price check, it hasnt been minimum amount of minutes yet")
             return
         self.lastSwitchGridExport = datetime.now()
@@ -185,14 +199,24 @@ class MainController:
 
 
 async def main():
+    global controller
     controller = MainController() 
+    
+    # cleanup handlers
+    atexit.register(lambda: asyncio.run(cleanup())) # normal exit
+    signal.signal(signal.SIGINT, lambda s, f: asyncio.run(cleanup())) # CTRL + C
+    signal.signal(signal.SIGTERM, lambda s, f: asyncio.run(cleanup())) # system shutdown / task kill
+    
+    
+    
     try:
         await controller.initialize()
     except Exception as e:
         print(f"Error in initialize: {str(e)}")
         print(traceback.format_exc())
+        await cleanup()
         
-    print("ended ?")
+    print("program ended")
 
 if __name__ == "__main__":
     asyncio.run(main())
