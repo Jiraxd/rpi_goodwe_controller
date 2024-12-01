@@ -136,7 +136,7 @@ class MainController:
                 self.logManager.log("Stopping water heating via TapoClient due to exceeding the max activation limit")
                 return
         
-        self.logManager.log(f"Battery level: {data.get("battery_soc", 0)}")
+        self.logManager.log(f"Battery level: {data.get('battery_soc', 0)}")
         if(config.min_battery_charge_for_water_heating > data.get("battery_soc", 0)):
             if(active):
                 if(datetime.now() - self.lastActivateLimitTapo < timedelta(minutes=config.min_minutes_activation_time_tapo)):
