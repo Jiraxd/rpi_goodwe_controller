@@ -136,7 +136,7 @@ class MainController:
                 self.logManager.log("Stopping water heating via TapoClient due to exceeding the max activation limit")
                 return
         
-        # self.logManager.log(f"Battery level: {data.get("battery_soc", 0)}")
+        self.logManager.log(f"Battery level: {data.get("battery_soc", 0)}")
         if(config.min_battery_charge_for_water_heating > data.get("battery_soc", 0)):
             if(active):
                 if(datetime.now() - self.lastActivateLimitTapo < timedelta(minutes=config.min_minutes_activation_time_tapo)):
@@ -164,7 +164,7 @@ class MainController:
         self.logManager.log("Starting water heating via TapoClient")
 
     async def check_price_and_disable_enable_sell(self):
-        apiOutput = self.apiClient.get_electricity_price()
+        apiOutput = await self.apiClient.get_electricity_price()
         priceJSON = json.loads(apiOutput)
         calculatedPrice = int(priceJSON["priceCZK"]) / 1000
         self.logManager.log(f"Current price : {calculatedPrice}")
