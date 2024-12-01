@@ -188,11 +188,18 @@ class MainController:
             return
         self.lastSwitchGridExport = datetime.now()
 
+        gridEnabled = await self.inverter.read_setting("grid_export")
         if(calculatedPrice < 1):
+            if(gridEnabled == 0):
+                self.logManager.log("Grid export is already disabled")
+                return
             self.logManager.log("Disabling grid export! - Price too low")
             return
             utils.disable_grid_export(self.inverter, self.logManager)
         else:
+            if(gridEnabled == 1):
+                self.logManager.log("Grid export is already enabled")
+                return
             self.logManager.log("Enabling grid export! - Price is higher than 1 CZK")
             return
             utils.enable_grid_export(self.inverter, self.logManager)
@@ -202,19 +209,24 @@ async def main():
     global controller
     controller = MainController() 
     
-    # cleanup handlers
-    atexit.register(lambda: asyncio.run(cleanup())) # normal exit
-    signal.signal(signal.SIGINT, lambda s, f: asyncio.run(cleanup())) # CTRL + C
-    signal.signal(signal.SIGTERM, lambda s, f: asyncio.run(cleanup())) # system shutdown / task kill
+    loop = asyncio.get_running_loop()
     
-    
+    async def handle_shutdown(sig):
+        controller.logManager.log(f"Received signal {sig}")
+        cleanup()
+        controller.logManager.log("Cleanup complete")
+        
+    for sig in (signal.SIGTERM, signal.SIGINT):
+        loop.add_signal_handler(
+            sig,
+            lambda s=sig: asyncio.create_task(handle_shutdown(s))
+        )
     
     try:
         await controller.initialize()
-    except Exception as e:
-        print(f"Error in initialize: {str(e)}")
-        print(traceback.format_exc())
+    finally:
         await cleanup()
+        controller.logManager.log("Cleanup complete")
         
     print("program ended")
 
