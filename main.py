@@ -14,7 +14,6 @@ from api_client import ApiClient
 from config import config
 from dotenv import load_dotenv
 import signal
-import atexit
 
 load_dotenv()
 
@@ -128,16 +127,12 @@ class MainController:
         export = data.get("active_power", 0)
         enabled = await self.inverter.read_setting("grid_export")
         if(export > config.max_export):
-            self.logManager.log("Turning on grid limit")
-            return
             await utils.enable_grid_limit(self.inverter, self.logManager)
         else:
             if(datetime.now() - self.lastActivateLimit > timedelta(minutes=config.min_minutes_before_deactivate_limit)):
                 if(enabled == 0): 
                     return
                 self.lastActivateLimit = datetime.now()
-                self.logManager.log("Turning off grid limit")
-                return
                 await utils.disable_grid_limit(self.inverter, self.logManager)
 
     async def check_water_heating(self, data):
@@ -194,14 +189,12 @@ class MainController:
                 self.logManager.log("Grid export is already disabled")
                 return
             self.logManager.log("Disabling grid export! - Price too low")
-            return
             utils.disable_grid_export(self.inverter, self.logManager)
         else:
             if(gridEnabled == 1):
                 self.logManager.log("Grid export is already enabled")
                 return
             self.logManager.log("Enabling grid export! - Price is higher than 1 CZK")
-            return
             utils.enable_grid_export(self.inverter, self.logManager)
 
 
