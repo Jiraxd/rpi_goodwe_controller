@@ -10,5 +10,6 @@ config = SimpleNamespace(
     min_minutes_before_deactivate_limit=30,
     min_minutes_activation_time_tapo=120,
     max_minutes_activation_time_tapo=200,
-    min_minutes_between_gridexport_switch=5
+    min_minutes_between_gridexport_switch=5,
+    check_for_electricity_price=True
 )

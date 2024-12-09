@@ -15,6 +15,8 @@ from config import config
 from dotenv import load_dotenv
 import signal
 
+
+# loads .env file, otherwise the values don't seem to load in
 load_dotenv()
 
 # sensors
@@ -52,8 +54,13 @@ class MainController:
         self.lastActivateLimit = datetime.now() - timedelta(minutes=30)
         self.lastActivateLimitTapo = datetime.now() - timedelta(minutes=config.min_minutes_activation_time_tapo)
         self.lastSwitchGridExport = datetime.now() - timedelta(minutes=config.min_minutes_between_gridexport_switch)
+        self.priceLowerThanZero = False
+        self.sellingDisabledLowerThanOne = False
         self.offlineMode = False # Set to True for testing purposes without connection to goodwe inverter
+        # TODO offline mode
         
+    
+    # Initializes managers, clients, also tries to connect to the inverter and runs default limit settings
     async def initialize(self):
         self.logManager = LoggerCustom()
         self.logManager.log("Initializing managers")
@@ -81,6 +88,7 @@ class MainController:
             await self.check_limit_disabled_on_init()
             self.cronManager.start()
 
+
     async def try_connection(self):
         for i in range(3):
             if(i == 3):
@@ -93,14 +101,14 @@ class MainController:
                 await asyncio.sleep(5)
         return False
 
+    # Called after connecting to inverter, it sets limit and limit enabled to default values
     @error_handler
     async def check_limit_disabled_on_init(self):
-        currentLimit = await self.inverter.read_setting("grid_export_limit")
-        if(currentLimit != config.max_export_set):
-            await utils.enable_grid_limit(self.inverter, self.logManager)
+        await utils.enable_grid_limit(self.inverter, self.logManager)
         
 
 
+    # Gets data from inverter, if printData is set to true it also prints it, it does not log it!
     @error_handler
     async def get_runtime_data(self, printData = False):
         runtime_data = await self.inverter.read_runtime_data()
@@ -110,6 +118,9 @@ class MainController:
                     print(f"{sensor.id_}: \t\t {sensor.name} = {runtime_data[sensor.id_]} {sensor.unit}")
         return runtime_data
 
+    # Called by cron from cros.py
+    # Gets latest data from inverter and prints it to LCD display
+    # This also returns the fetched data back to the cron, which then calls check_grid_limit
     async def get_data_and_write_to_lcd(self):
         data = await self.get_runtime_data(False)
         self.lcdmanager.write_lines([
@@ -120,25 +131,47 @@ class MainController:
         ])
         return data
 
+    # Calls method to get data without printing the data it got
     async def get_data(self):
         return await self.get_runtime_data(False)
 
+    # Called by cron from crons.py
+    # Checks if we're exporting more than allowed, if yes, enables limit and sets it to maximum export allowed
+    # If not, disables grid export limit (Inverter doesn't take that much energz from grid if limit is disabled)
     async def check_grid_limit(self, data):
         export = data.get("active_power", 0)
+
         enabled = await self.inverter.read_setting("grid_export")
+
+
+        # Controlled by check_price_and_disable_enable_sell, if the current price for electricity is in minus, we keep grid export disabled
+        if(self.priceLowerThanZero):
+            self.logManager.log("Price is lower than 0, not continueing with check grid limit")
+            return
+
+        # If we're exporting more than the max limit (i suggest 200 less than actual limit) we enable the limit
         if(export > config.max_export):
             await utils.enable_grid_limit(self.inverter, self.logManager)
         else:
+            # No need to deactivate the limit everytime the solar panel output changes
             if(datetime.now() - self.lastActivateLimit > timedelta(minutes=config.min_minutes_before_deactivate_limit)):
                 if(enabled == 0): 
                     return
                 self.lastActivateLimit = datetime.now()
+                if(self.sellingDisabledLowerThanOne):
+                    self.logManager.log("Could not disable grid limit, price is too low!")
+                    return
                 await utils.disable_grid_limit(self.inverter, self.logManager)
+
+    # Called by cron from crons.py
+    # Checks if we can start heating water using electricity (heated water is stored and is used to heat up the house)
+    # Heating start only if battery is charged above certain level and if the solar panels are outputting more than certain amount
 
     async def check_water_heating(self, data):
         await self.tapoClient.print_device_info()
+
+        # If device is enabled for more than X minutes, it automatically disables, it takes approximately 2-2.5h to fully heat up water
         active = await self.tapoClient.check_is_active()
-        
         if(active):
             if(datetime.now() - self.lastActivateLimitTapo > timedelta(minutes=config.max_minutes_activation_time_tapo)):
                 await self.tapoClient.stop_device()
@@ -172,29 +205,71 @@ class MainController:
         self.lastActivateLimitTapo = datetime.now()
         self.logManager.log("Starting water heating via TapoClient")
 
+    # If check_for_electricity_price is enabled in configuraton, it checks for selling price of electricity and disables selling to grid if the price is too low
+    # Works only for CZK price
     async def check_price_and_disable_enable_sell(self):
+        if(config.check_for_electricity_price == False):
+            self.logManager.log("check_price_and_disable_enable_sell is disabled in configuration!")
+            return
+        
+        # Gets current price from API in CZK/KwH and logs it
         apiOutput = await self.apiClient.get_electricity_price()
         priceJSON = json.loads(apiOutput)
         calculatedPrice = int(priceJSON["priceCZK"]) / 1000
         self.logManager.log(f"Current price : {calculatedPrice}")
 
+
+        gridEnabled = await self.inverter.read_setting("grid_export")
+        data = await self.get_data()
+        export = data.get("active_power", 0)
+
+        # If price is lower than 0, we need to disable export
+        if(calculatedPrice < 0):
+            self.logManager.log("Price is lower than 0, disabling selling!")
+            self.priceLowerThanZero = True
+            if(gridEnabled == 0):
+                self.logManager.log("Grid export is already disabled")
+                return
+            utils.disable_grid_export(self.inverter, self.logManager)
+            return
+        else:
+            self.priceLowerThanZero = False
+
+            # Enables selling while also enabling or disabling export limit based on the current export
+            if(export > config.max_export):
+                utils.enable_grid_limit()
+            else:
+                utils.disable_grid_limit()
+
+
+
+        # Ensures that it's been minimum 5 minutes between enabling or disabling export
         if(datetime.now() - self.lastSwitchGridExport < timedelta(minutes=config.min_minutes_between_gridexport_switch)):
             self.logManager.log("Could not continue with price check, it hasnt been minimum amount of minutes yet")
             return
         self.lastSwitchGridExport = datetime.now()
 
-        gridEnabled = await self.inverter.read_setting("grid_export")
+
+        # Enabling or disabling selling also changes the limit, we need to make sure it does not override each other
+        if(export > config.max_export):
+            self.logManager.log("Could not continue with price check, the export is more than max_export limit")
+            return
+
+
+        
         if(calculatedPrice < 1):
             if(gridEnabled == 0):
                 self.logManager.log("Grid export is already disabled")
                 return
             self.logManager.log("Disabling grid export! - Price too low")
+            self.sellingDisabledLowerThanOne = True
             utils.disable_grid_export(self.inverter, self.logManager)
         else:
             if(gridEnabled == 1):
                 self.logManager.log("Grid export is already enabled")
                 return
             self.logManager.log("Enabling grid export! - Price is higher than 1 CZK")
+            self.sellingDisabledLowerThanOne = False
             utils.enable_grid_export(self.inverter, self.logManager)
 
 
