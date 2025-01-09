@@ -1,7 +1,5 @@
 import asyncio
 import json
-import sys
-import traceback
 import goodwe
 from decorators import error_handler
 import utils
@@ -237,9 +235,9 @@ class MainController:
 
             # Enables selling while also enabling or disabling export limit based on the current export
             if(export > config.max_export):
-                utils.enable_grid_limit()
+                utils.enable_grid_limit(self.inverter, self.logManager)
             else:
-                utils.disable_grid_limit()
+                utils.disable_grid_limit(self.inverter, self.logManager)
 
 
 
