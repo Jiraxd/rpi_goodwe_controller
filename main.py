@@ -147,6 +147,10 @@ class MainController:
             self.logManager.log("Price is lower than 0, not continueing with check grid limit")
             return
 
+
+        self.logManager.log(f"Export: {export}")
+        self.logManager.log(f"Grid export enabled: {enabled}")
+        self.logManager.log(f"Max export: {config.max_export}")
         # If we're exporting more than the max limit (i suggest 200 less than actual limit) we enable the limit
         if(export > config.max_export):
             await utils.enable_grid_limit(self.inverter, self.logManager)
@@ -160,6 +164,8 @@ class MainController:
                     self.logManager.log("Could not disable grid limit, price is too low!")
                     return
                 await utils.disable_grid_limit(self.inverter, self.logManager)
+            else:
+                self.logManager.log("Could not disable grid limit, it hasn't been minimum amount of minutes yet")
 
     # Called by cron from crons.py
     # Checks if we can start heating water using electricity (heated water is stored and is used to heat up the house)
