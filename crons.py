@@ -23,7 +23,9 @@ class CronManager:
 
 
 @pycron.cron("* * * * * */15") 
-async def getDataAndWriteToLCD(timestamp: datetime):  
+async def getDataAndWriteToLCD(timestamp: datetime):
+    if(controller.status == "Off"):
+        return  
     logManager.log("Running cron getDataAndWriteToLCD()")
     data = await controller.get_data_and_write_to_lcd()
     await controller.check_grid_limit(data)
@@ -31,6 +33,8 @@ async def getDataAndWriteToLCD(timestamp: datetime):
 
 #@pycron.cron("* * * * * */30")
 async def checkWaterHeating(timestamp: datetime):  
+    if(controller.status == "Off"):
+        return 
     logManager.log("Running cron checkWaterHeating()")
     data = await controller.get_data()
     await controller.check_water_heating(data)
@@ -38,6 +42,8 @@ async def checkWaterHeating(timestamp: datetime):
         
 #@pycron.cron("* * * * * */60")
 async def checkPrice(timestamp: datetime):
+    if(controller.status == "Off"):
+        return 
     logManager.log("Running cron checkPrice()")
     await controller.check_price_and_disable_enable_sell()
     logManager.log("Cron checkPrice() finished running!")

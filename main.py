@@ -12,10 +12,9 @@ from api_client import ApiClient
 from config import config
 from dotenv import load_dotenv
 import signal
+from fastapi import FastAPI, APIRouter
+from web_server import WebServer
 
-
-# loads .env file, otherwise the values don't seem to load in
-load_dotenv()
 
 # sensors
 # ppv - current production in W
@@ -43,6 +42,7 @@ async def cleanup():
 
 class MainController:
     def __init__(self):
+        self.status: "Off" | "On" = "Off" 
         self.inverter = None
         self.lcdmanager = None 
         self.cronManager = None
@@ -280,7 +280,13 @@ class MainController:
 async def main():
     global controller
     controller = MainController() 
-    
+
+    # Init web server
+    app = FastAPI()
+    server = WebServer(controller)
+    app.include_router(server.router)
+
+
     loop = asyncio.get_running_loop()
     
     async def handle_shutdown(sig):
@@ -303,4 +309,6 @@ async def main():
     print("program ended")
 
 if __name__ == "__main__":
+    # loads .env file, otherwise the values don't seem to load in
+    load_dotenv()
     asyncio.run(main())
