@@ -3,7 +3,7 @@ from types import SimpleNamespace
 config = SimpleNamespace(
     ip_address='192.168.0.114',
     tapo_ip_address="192.168.0.106", 
-    max_export=5000,
+    max_export=1200,
     max_export_set=5400,
     min_battery_charge_for_water_heating=75,
     min_solar_output_for_water_heating=2500,
