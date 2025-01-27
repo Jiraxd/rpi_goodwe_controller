@@ -1,4 +1,3 @@
-from main import MainController
 from starlette.responses import FileResponse 
 
 # pip install fastapi
@@ -6,7 +5,7 @@ from starlette.responses import FileResponse
 
 class WebServer:
 
-    def __init__(self, control: MainController):
+    def __init__(self, control):
         self.controller = control
         self.router = APIRouter()
         self.router.add_api_route("/", self.index_page, methods=["GET"])
