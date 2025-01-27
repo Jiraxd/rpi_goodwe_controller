@@ -12,7 +12,6 @@ from api_client import ApiClient
 from config import config
 from dotenv import load_dotenv
 import signal
-from fastapi import FastAPI, APIRouter
 from web_server import WebServer
 
 
@@ -281,10 +280,8 @@ async def main():
     global controller
     controller = MainController() 
 
-    # Init web server
-    app = FastAPI()
     server = WebServer(controller)
-    app.include_router(server.router)
+    server.run(host="127.0.0.1", port=8000)
 
 
     loop = asyncio.get_running_loop()
