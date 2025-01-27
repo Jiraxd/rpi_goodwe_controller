@@ -153,7 +153,7 @@ class MainController:
         self.logManager.log(f"Grid export enabled: {enabled}")
         self.logManager.log(f"Max export: {config.max_export}")
         # If we're exporting more than the max limit (i suggest 200 less than actual limit) we enable the limit
-        if(export > config.max_export or export < 0):
+        if(export > config.max_export):
             await utils.enable_grid_limit(self.inverter, self.logManager)
         else:
             # No need to deactivate the limit everytime the solar panel output changes
