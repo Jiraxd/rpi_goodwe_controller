@@ -41,7 +41,7 @@ async def cleanup():
 
 class MainController:
     def __init__(self):
-        self.status: "Off" | "On" = "Off" 
+        self.status: "Off" | "On" = "On" 
         self.inverter = None
         self.lcdmanager = None 
         self.cronManager = None
@@ -156,7 +156,8 @@ class MainController:
         else:
             # No need to deactivate the limit everytime the solar panel output changes
             if(datetime.now() - self.lastActivateLimit > timedelta(minutes=config.min_minutes_before_deactivate_limit)):
-                if(enabled == 0): 
+                if(enabled == 0):
+                    self.logManager.log("Grid export is already disabled")
                     return
                 self.lastActivateLimit = datetime.now()
                 if(self.sellingDisabledLowerThanOne):
@@ -164,6 +165,9 @@ class MainController:
                     return
                 await utils.disable_grid_limit(self.inverter, self.logManager)
             else:
+                if(enabled == 0):
+                    self.logManager.log("Grid export is already disabled")
+                    return
                 self.logManager.log("Could not disable grid limit, it hasn't been minimum amount of minutes yet")
 
     # Called by cron from crons.py
