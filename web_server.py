@@ -11,8 +11,8 @@ class WebServer:
         self.router = APIRouter()
         self.router.add_api_route("/", self.index_page, methods=["GET"])
         self.router.add_api_route("/status", self.get_status, methods=["GET"])
-        self.router.add_api_route("/start", self.stop_script, methods=["GET"])
-        self.router.add_api_route("/stop", self.start_script, methods=["GET"])
+        self.router.add_api_route("/start", self.start_script, methods=["GET"])
+        self.router.add_api_route("/stop", self.stop_script, methods=["GET"])
         self.app.include_router(self.router)
 
     def index_page(self):
