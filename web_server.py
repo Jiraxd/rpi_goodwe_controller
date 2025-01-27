@@ -2,6 +2,7 @@ from starlette.responses import FileResponse
 from fastapi import FastAPI, APIRouter
 import uvicorn
 import asyncio
+import threading
 
 class WebServer:
     def __init__(self, control):
@@ -32,5 +33,10 @@ class WebServer:
         print(f"Starting server on {host}:{port}")
         config = uvicorn.Config(self.app, host=host, port=port)
         server = uvicorn.Server(config)
-        loop = asyncio.get_event_loop()
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         loop.run_until_complete(server.serve())
+
+    def start_in_thread(self, host="0.0.0.0", port=8000):
+        thread = threading.Thread(target=self.run, args=(host, port))
+        thread.start()

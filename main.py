@@ -281,7 +281,7 @@ async def main():
     controller = MainController() 
 
     server = WebServer(controller)
-    server.run(host="127.0.0.1", port=8000)
+    server.start_in_thread(host="127.0.0.1", port=8000)
 
 
     loop = asyncio.get_running_loop()
