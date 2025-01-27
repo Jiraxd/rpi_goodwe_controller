@@ -14,6 +14,7 @@ class WebServer:
         self.router.add_api_route("/start", self.start_script, methods=["GET"])
         self.router.add_api_route("/stop", self.stop_script, methods=["GET"])
         self.app.include_router(self.router)
+        self.shutdown_event = threading.Event()
 
     def index_page(self):
         return FileResponse('index.html')
@@ -36,7 +37,13 @@ class WebServer:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.run_until_complete(server.serve())
+        while not self.shutdown_event.is_set():
+            loop.run_until_complete(asyncio.sleep(1))
 
     def start_in_thread(self, host="0.0.0.0", port=8000):
-        thread = threading.Thread(target=self.run, args=(host, port))
-        thread.start()
+        self.server_thread = threading.Thread(target=self.run, args=(host, port))
+        self.server_thread.start()
+
+    def stop(self):
+        self.shutdown_event.set()
+        self.server_thread.join()

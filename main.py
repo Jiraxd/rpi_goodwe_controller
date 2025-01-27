@@ -26,7 +26,7 @@ from web_server import WebServer
 # grid_export_limit - limit of export to grid in W
 # grid_export - 1 - enables limiter, 0 - disables limiter
 
-async def cleanup():
+async def cleanup(server):
     # Close httpx client
     if controller.apiClient:
         await controller.apiClient.close()
@@ -38,6 +38,8 @@ async def cleanup():
     # Stop cron jobs
     if controller.cronManager:
         controller.cronManager.stop()
+        
+    server.stop()
 
 class MainController:
     def __init__(self):
@@ -292,7 +294,7 @@ async def main():
     
     async def handle_shutdown(sig):
         controller.logManager.log(f"Received signal {sig}")
-        cleanup()
+        cleanup(server)
         controller.logManager.log("Cleanup complete")
         
     for sig in (signal.SIGTERM, signal.SIGINT):
@@ -304,7 +306,7 @@ async def main():
     try:
         await controller.initialize()
     finally:
-        await cleanup()
+        await cleanup(server)
         controller.logManager.log("Cleanup complete")
         
     print("program ended")
