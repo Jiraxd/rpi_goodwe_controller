@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Panel Controller</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+        input {
+            margin-top: 20px;
+            padding: 10px;
+            font-size: 16px;
+        }
+        .status-message {
+            margin-top: 20px;
+            font-size: 16px;
+            color: red;
+        }
+    </style>
+    <script>
+        async function fetchStatus() {
+            try {
+                const response = await fetch('http://127.0.0.1:8000/status');
+                const data = await response.json();
+                document.getElementById('status').innerText = `Status: ${data.status}`;
+                const button = document.getElementById('controlButton');
+                if (data.status === 'On') {
+                    button.innerText = 'Stop Script';
+                    button.onclick = stopScript;
+                } else {
+                    button.innerText = 'Start Script';
+                    button.onclick = startScript;
+                }
+            } catch (error) {
+                console.error('Error fetching status:', error);
+            }
+        }
+    
+        async function startScript() {
+            try {
+                const password = document.getElementById('password').value;
+                const response = await fetch(`http://127.0.0.1:8000/start?pass=${password}`);
+                if (response.ok) {
+                    document.getElementById('statusMessage').innerText = 'Script started successfully';
+                } else if (response.status === 401) {
+                    const errorData = await response.json();
+                    document.getElementById('statusMessage').innerText = errorData.detail;
+                } else {
+                    document.getElementById('statusMessage').innerText = 'Failed to start script';
+                }
+                fetchStatus();
+            } catch (error) {
+                document.getElementById('statusMessage').innerText = 'Error starting script';
+                console.error('Error starting script:', error);
+            }
+        }
+    
+        async function stopScript() {
+            try {
+                const password = document.getElementById('password').value;
+                const response = await fetch(`http://127.0.0.1:8000/stop?pass=${password}`);
+                if (response.ok) {
+                    document.getElementById('statusMessage').innerText = 'Script stopped successfully';
+                } else if (response.status === 401) {
+                    const errorData = await response.json();
+                    document.getElementById('statusMessage').innerText = errorData.detail;
+                } else {
+                    document.getElementById('statusMessage').innerText = 'Failed to stop script';
+                }
+                fetchStatus();
+            } catch (error) {
+                document.getElementById('statusMessage').innerText = 'Error stopping script';
+                console.error('Error stopping script:', error);
+            }
+        }
+    
+        window.onload = fetchStatus;
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Solar Panel Controller</h1>
+        <p id="status">Status: Loading...</p>
+        <input type="password" id="password" placeholder="Enter password">
+        <button id="controlButton">Loading...</button>
+        <p id="statusMessage" class="status-message"></p>
+    </div>
+</body>
+</html>

@@ -1,9 +1,10 @@
 from starlette.responses import FileResponse 
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, Request, HTTPException
 import uvicorn
 import asyncio
 import threading
 
+password = "rpiadmin123"
 class WebServer:
     def __init__(self, control):
         self.controller = control
@@ -22,13 +23,19 @@ class WebServer:
     def get_status(self):
         return {"status": self.controller.status}
 
-    def stop_script(self):
+    async def stop_script(self, request: Request):
+        pwd = request.query_params.get("pass")
+        if pwd != password:
+            raise HTTPException(status_code=401, detail="Invalid password")
         self.controller.status = "Off"
-        return {"status":"Stopped script!"}
+        return {"status": "Stopped script!"}
 
-    def start_script(self):
+    async def start_script(self, request: Request):
+        pwd = request.query_params.get("pass")
+        if pwd != password:
+            raise HTTPException(status_code=401, detail="Invalid password")
         self.controller.status = "On"
-        return {"status":"Started script!"}
+        return {"status": "Started script!"}
 
     def run(self, host="0.0.0.0", port=8000):
         print(f"Starting server on {host}:{port}")
