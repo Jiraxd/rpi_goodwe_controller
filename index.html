@@ -34,8 +34,29 @@
             font-size: 16px;
             color: red;
         }
+        .info-container {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .info-item {
+            margin: 5px 0;
+        }
     </style>
     <script>
+        async function fetchInfo() {
+            try {
+                const response = await fetch('http://127.0.0.1:8000/info');
+                const data = await response.json();
+                document.getElementById('production').innerText = `Production: ${data.production} W`;
+                document.getElementById('consumption').innerText = `Consumption: ${data.consumption} W`;
+                document.getElementById('battery').innerText = `Battery: ${data.battery}%`;
+                document.getElementById('export').innerText = `Grid: ${data.export} W`;
+            } catch (error) {
+                console.error('Error fetching info:', error);
+            }
+        }
         async function fetchStatus() {
             try {
                 const response = await fetch('http://127.0.0.1:8000/status');
@@ -102,6 +123,14 @@
         <input type="password" id="password" placeholder="Enter password">
         <button id="controlButton">Loading...</button>
         <p id="statusMessage" class="status-message"></p>
+        <button onclick="fetchInfo()">Refresh Info</button>
+        <div class="info-container">
+            <p id="production" class="info-item">Production: --</p>
+            <p id="consumption" class="info-item">Consumption: --</p>
+            <p id="battery" class="info-item">Battery: --</p>
+            <p id="export" class="info-item">Export: --</p>
+            
+        </div>
     </div>
 </body>
 </html>

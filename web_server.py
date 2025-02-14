@@ -14,9 +14,17 @@ class WebServer:
         self.router.add_api_route("/status", self.get_status, methods=["GET"])
         self.router.add_api_route("/start", self.start_script, methods=["GET"])
         self.router.add_api_route("/stop", self.stop_script, methods=["GET"])
+        self.router.add_api_route("/info", self.get_info, methods=["GET"])
         self.app.include_router(self.router)
         self.shutdown_event = threading.Event()
 
+    async def get_info(self):
+        data = await self.controller.get_data()
+        return {"production": data["ppv"],
+               "consumption": data["house_consumption"],
+               "battery": data["battery_soc"],
+               "export": data["export"],
+               "import": data["active_power"]}
     def index_page(self):
         return FileResponse('index.html')
     
