@@ -24,8 +24,8 @@ class WebServer:
         return {"production": data["ppv"],
                "consumption": data["house_consumption"],
                "battery": data["battery_soc"],
-               "export": data["export"],
-               "import": data["active_power"]}
+               "export": data["active_power"]
+        }
     def index_page(self):
         return FileResponse('index.html')
     
@@ -46,7 +46,7 @@ class WebServer:
         self.controller.status = "On"
         return {"status": "Started script!"}
     async def historical_data_handler(self, request: Request):
-        period = request.query.get('period', 'all')
+        period = request.query_params.get('period', 'all')
         data = await self.controller.get_historical_data(period)
         return data
 
