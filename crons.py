@@ -49,7 +49,7 @@ async def checkPrice(timestamp: datetime):
     await controller.check_price_and_disable_enable_sell()
     logManager.log("Cron checkPrice() finished running!")
     
-@pycron.cron("* * * * */30 *") 
+@pycron.cron("*/30 * * * *")
 @error_handler
 async def storeHistoricalData(timestamp: datetime):
     if controller.status == "Off":
