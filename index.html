@@ -24,11 +24,11 @@
             cursor: pointer;
             border: none;
             border-radius: 4px;
+            background-color: #4CAF50;
             color: white;
-            background-color: #007bff;
         }
         button:hover {
-            background-color: #3a4e8d;
+            background-color: #45a049;
         }
         input {
             margin: 10px 0;
@@ -367,7 +367,7 @@
           setInterval(loadHistoricalData, 5 * 60 * 1000);
         });
         
-   
+        // Initialize data on page load
         window.onload = () => {
             fetchStatus();
             fetchInfo();
