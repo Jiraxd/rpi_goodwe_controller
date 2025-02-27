@@ -166,7 +166,6 @@
         <input type="password" id="password" placeholder="Enter password">
         <button id="controlButton">Loading...</button>
         <p id="statusMessage" class="status-message"></p>
-        <button onclick="fetchInfo()">Refresh Info</button>
         <div class="info-container">
             <p id="production" class="info-item">Production: --</p>
             <p id="consumption" class="info-item">Consumption: --</p>
@@ -445,6 +444,7 @@
           
           // every 5 mins refresh data
           setInterval(loadHistoricalData, 5 * 60 * 1000);
+          setInterval(fetchInfo, 5 * 60);
         });
         
         window.onload = () => {
