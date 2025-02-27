@@ -1,7 +1,8 @@
 import pycron
-import asyncio
+import json
+import os
 from decorators import error_handler
-from datetime import datetime
+from datetime import datetime, timedelta
 
 logManager = None
 controller = None
@@ -47,3 +48,29 @@ async def checkPrice(timestamp: datetime):
     logManager.log("Running cron checkPrice()")
     await controller.check_price_and_disable_enable_sell()
     logManager.log("Cron checkPrice() finished running!")
+    
+@pycron.cron("*/30 * * * *") 
+@error_handler
+async def storeHistoricalData(timestamp: datetime):
+    if controller.status == "Off":
+        return
+    logManager.log("Running cron storeHistoricalData()")
+    
+    try:
+        full_data = await controller.get_data()
+        if full_data:
+            data = {
+                "timestamp": timestamp.isoformat(),
+                "ppv": full_data.get("ppv", 0),
+                "house_consumption": full_data.get("house_consumption", 0),
+                "active_power": full_data.get("active_power", 0)
+            }
+            await controller.store_historical_data(data)
+            logManager.log(f"Historical data stored at {timestamp}")
+        else:
+            logManager.log("No data available to store", level=30)
+    except Exception as e:
+        logManager.log(f"Error storing historical data: {str(e)}", level=40)
+        
+    logManager.log("Cron storeHistoricalData() finished running!")
+    

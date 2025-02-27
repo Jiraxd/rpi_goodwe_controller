@@ -13,7 +13,7 @@ from config import config
 from dotenv import load_dotenv
 import signal
 from web_server import WebServer
-
+import os
 
 # sensors
 # ppv - current production in W
@@ -280,6 +280,55 @@ class MainController:
             self.logManager.log("Enabling grid export! - Price is higher than 1 CZK")
             self.sellingDisabledLowerThanOne = False
             utils.enable_grid_export(self.inverter, self.logManager)
+    @error_handler
+    async def store_historical_data(self, data):
+        if not os.path.exists('data'):
+            os.makedirs('data')
+        
+        history_file = 'data/history.json'
+        
+        # Load existing data
+        if os.path.isfile(history_file):
+            with open(history_file, 'r') as f:
+                historical_data = json.load(f)
+        else:
+            historical_data = []
+
+        # Append new data
+        historical_data.append(data)
+
+        # Retain only the last week of data
+        one_week_ago = datetime.now() - timedelta(weeks=1)
+        historical_data = [entry for entry in historical_data 
+                        if datetime.fromisoformat(entry['timestamp']) > one_week_ago]
+
+        # Save updated data
+        with open(history_file, 'w') as f:
+            json.dump(historical_data, f)
+        
+        return historical_data
+
+    @error_handler
+    async def get_historical_data(self, period='all'):
+        history_file = 'data/history.json'
+        
+        if not os.path.isfile(history_file):
+            return []
+        
+        with open(history_file, 'r') as f:
+            historical_data = json.load(f)
+        
+        # Filter by period if specified
+        if period == 'day':
+            today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            historical_data = [entry for entry in historical_data 
+                            if datetime.fromisoformat(entry['timestamp']) >= today]
+        elif period == 'week':
+            week_ago = datetime.now() - timedelta(days=7)
+            historical_data = [entry for entry in historical_data 
+                            if datetime.fromisoformat(entry['timestamp']) >= week_ago]
+        
+        return historical_data
 
 
 async def main():

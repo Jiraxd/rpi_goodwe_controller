@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solar Panel Controller</title>
@@ -44,10 +45,183 @@
             margin: 5px 0;
         }
     </style>
+<script>
+    let powerChart;
+    let currentPeriod = 'day';
+    let chartData = [];
+    
+   
+    function initChart() {
+      const ctx = document.getElementById('powerChart').getContext('2d');
+      powerChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: 'Solar Production (W)',
+              data: [],
+              borderColor: 'rgba(255, 193, 7, 1)',
+              backgroundColor: 'rgba(255, 193, 7, 0.2)',
+              fill: true,
+              tension: 0.4
+            },
+            {
+              label: 'House Consumption (W)',
+              data: [],
+              borderColor: 'rgba(220, 53, 69, 1)',
+              backgroundColor: 'rgba(220, 53, 69, 0.2)',
+              fill: true,
+              tension: 0.4
+            },
+            {
+              label: 'Grid Export (W)',
+              data: [],
+              borderColor: 'rgba(40, 167, 69, 1)',
+              backgroundColor: 'rgba(40, 167, 69, 0.2)',
+              fill: true,
+              tension: 0.4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Time'
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Power (W)'
+              },
+              beginAtZero: true
+            }
+          }
+        }
+      });
+      
+
+      loadHistoricalData();
+    }
+    
+
+    async function loadHistoricalData() {
+      try {
+        const response = await fetch(`/historical-data?period=${currentPeriod}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        chartData = await response.json();
+        updateChart(chartData);
+      } catch (error) {
+        console.error('Error fetching historical data:', error);
+      }
+    }
+    
+
+    function updateChart(data) {
+   
+      data.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+      
+   
+      const formatTime = (timestamp) => {
+        const date = new Date(timestamp);
+        return currentPeriod === 'day' 
+          ? date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+          : date.toLocaleDateString([], {weekday: 'short'}) + ' ' + 
+            date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      };
+      
+  
+      const labels = data.map(entry => formatTime(entry.timestamp));
+      const ppvData = data.map(entry => entry.ppv || 0);
+      const consumptionData = data.map(entry => entry.house_consumption || 0);
+      const exportData = data.map(entry => entry.active_power || 0);
+      
+   
+      powerChart.data.labels = labels;
+      powerChart.data.datasets[0].data = ppvData;
+      powerChart.data.datasets[1].data = consumptionData;
+      powerChart.data.datasets[2].data = exportData;
+      powerChart.update();
+    }
+    
+    
+    function downloadCSV() {
+      if (!chartData || chartData.length === 0) {
+        alert('No data to download');
+        return;
+      }
+      
+     
+      const headers = ['Timestamp', 'Solar Production (W)', 'House Consumption (W)', 'Grid Export (W)'];
+      let csvContent = headers.join(',') + '\n';
+      
+      chartData.forEach(entry => {
+        const row = [
+          entry.timestamp,
+          entry.ppv || 0,
+          entry.house_consumption || 0,
+          entry.active_power || 0
+        ];
+        csvContent += row.join(',') + '\n';
+      });
+      
+    
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      
+
+      const date = new Date();
+      const dateStr = date.toISOString().split('T')[0];
+      link.setAttribute('href', url);
+      link.setAttribute('download', `solar-data-${dateStr}.csv`);
+      link.style.visibility = 'hidden';
+      
+    
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+    
+ 
+    document.addEventListener('DOMContentLoaded', () => {
+      initChart();
+      
+      document.getElementById('viewDay').addEventListener('click', () => {
+        currentPeriod = 'day';
+        document.getElementById('viewDay').classList.add('btn-primary');
+        document.getElementById('viewDay').classList.remove('btn-outline-primary');
+        document.getElementById('viewWeek').classList.add('btn-outline-primary');
+        document.getElementById('viewWeek').classList.remove('btn-primary');
+        loadHistoricalData();
+      });
+      
+      document.getElementById('viewWeek').addEventListener('click', () => {
+        currentPeriod = 'week';
+        document.getElementById('viewWeek').classList.add('btn-primary');
+        document.getElementById('viewWeek').classList.remove('btn-outline-primary');
+        document.getElementById('viewDay').classList.add('btn-outline-primary');
+        document.getElementById('viewDay').classList.remove('btn-primary');
+        loadHistoricalData();
+      });
+      
+      document.getElementById('downloadData').addEventListener('click', downloadCSV);
+      
+      // every 5 mins refresh data
+      setInterval(loadHistoricalData, 5 * 60 * 1000);
+    });
+  </script>
     <script>
         async function fetchInfo() {
             try {
-                const response = await fetch('http://127.0.0.1:8000/info');
+                const response = await fetch('/info');
                 const data = await response.json();
                 document.getElementById('production').innerText = `Production: ${data.production} W`;
                 document.getElementById('consumption').innerText = `Consumption: ${data.consumption} W`;
@@ -59,7 +233,7 @@
         }
         async function fetchStatus() {
             try {
-                const response = await fetch('http://127.0.0.1:8000/status');
+                const response = await fetch('/status');
                 const data = await response.json();
                 document.getElementById('status').innerText = `Status: ${data.status}`;
                 const button = document.getElementById('controlButton');
@@ -78,7 +252,7 @@
         async function startScript() {
             try {
                 const password = document.getElementById('password').value;
-                const response = await fetch(`http://127.0.0.1:8000/start?pass=${password}`);
+                const response = await fetch(`/start?pass=${password}`);
                 if (response.ok) {
                     document.getElementById('statusMessage').innerText = 'Script started successfully';
                 } else if (response.status === 401) {
@@ -97,7 +271,7 @@
         async function stopScript() {
             try {
                 const password = document.getElementById('password').value;
-                const response = await fetch(`http://127.0.0.1:8000/stop?pass=${password}`);
+                const response = await fetch(`/stop?pass=${password}`);
                 if (response.ok) {
                     document.getElementById('statusMessage').innerText = 'Script stopped successfully';
                 } else if (response.status === 401) {
@@ -131,6 +305,19 @@
             <p id="export" class="info-item">Export: --</p>
             
         </div>
+        <div class="card">
+            <div class="card-header">
+              <h5>Historical Data</h5>
+            </div>
+            <div class="card-body">
+              <div class="btn-group mb-3" role="group">
+                <button type="button" class="btn btn-primary" id="viewDay">Today</button>
+                <button type="button" class="btn btn-outline-primary" id="viewWeek">Past Week</button>
+                <button type="button" class="btn btn-outline-secondary" id="downloadData">Download CSV</button>
+              </div>
+              <canvas id="powerChart" width="400" height="200"></canvas>
+            </div>
+          </div>
     </div>
 </body>
 </html>
