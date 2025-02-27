@@ -6,17 +6,35 @@
     <title>Solar Panel Controller</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        :root {
+            --bg-primary: #1e1e2e;
+            --bg-secondary: #252535;
+            --bg-tertiary: #2a2a3a;
+            --text-primary: #e2e2e2;
+            --text-secondary: #b0b0b0;
+            --accent-primary: #4d7dc1;
+            --accent-secondary: #355992;
+            --border-color: #3a3a4a;
+            --success-color: #2d8a46;
+            --warning-color: #c19b35;
+            --danger-color: #b33f3f;
+        }
+        
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 20px;
             min-height: 100vh;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
         }
+        
         .container {
             max-width: 1000px;
             margin: 0 auto;
             padding: 20px 0 50px 0;
         }
+        
         button {
             margin: 10px 5px;
             padding: 10px 20px;
@@ -24,85 +42,120 @@
             cursor: pointer;
             border: none;
             border-radius: 4px;
-            background-color: #4CAF50;
-            color: white;
+            color: var(--text-primary);
+            background-color: var(--accent-primary);
+            transition: background-color 0.2s;
         }
+        
         button:hover {
-            background-color: #45a049;
+            background-color: var(--accent-secondary);
         }
+        
         input {
             margin: 10px 0;
             padding: 10px;
             font-size: 16px;
             border-radius: 4px;
-            border: 1px solid #ccc;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            outline: none;
         }
+        
+        input:focus {
+            border-color: var(--accent-primary);
+        }
+        
         .status-message {
             margin: 10px 0;
             font-size: 16px;
-            color: red;
+            color: var(--danger-color);
             min-height: 20px;
         }
+        
         .info-container {
             margin: 20px 0;
             padding: 15px;
-            border: 1px solid #ccc;
+            border: 1px solid var(--border-color);
             border-radius: 5px;
-            background-color: #f9f9f9;
+            background-color: var(--bg-secondary);
         }
+        
         .info-item {
             margin: 10px 0;
             font-size: 16px;
         }
+        
         .card {
             margin-top: 30px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+            background-color: var(--bg-secondary);
         }
+        
         .card-header {
-            background-color: #f5f5f5;
+            background-color: var(--bg-tertiary);
             padding: 10px 15px;
-            border-bottom: 1px solid #ddd;
+            border-bottom: 1px solid var(--border-color);
         }
+        
         .card-header h5 {
             margin: 0;
             font-size: 18px;
+            color: var(--text-primary);
         }
+        
         .card-body {
             padding: 20px;
             min-height: 300px;
         }
+        
         .btn-group {
             margin-bottom: 15px;
             display: flex;
             gap: 5px;
         }
+        
         .btn {
             padding: 8px 15px;
             border-radius: 4px;
             border: 1px solid transparent;
             cursor: pointer;
+            transition: all 0.2s;
         }
+        
         .btn-primary {
-            background-color: #007bff;
-            color: white;
+            background-color: var(--accent-primary);
+            color: var(--text-primary);
         }
+        
         .btn-outline-primary {
-            background-color: white;
-            color: #007bff;
-            border-color: #007bff;
+            background-color: transparent;
+            color: var(--accent-primary);
+            border-color: var(--accent-primary);
         }
+        
         .btn-outline-secondary {
-            background-color: white;
-            color: #6c757d;
-            border-color: #6c757d;
+            background-color: transparent;
+            color: var(--text-secondary);
+            border-color: var(--text-secondary);
         }
+        
+        .btn:hover {
+            filter: brightness(1.1);
+        }
+        
         #powerChart {
             margin-top: 20px;
             height: 400px !important;
             width: 100% !important;
+        }
+        
+        /* Chart.js dark mode styles */
+        canvas {
+            filter: brightness(0.9) contrast(0.85);
         }
     </style>
 </head>
@@ -145,6 +198,11 @@
         
         function initChart() {
           const ctx = document.getElementById('powerChart').getContext('2d');
+          
+          // Set Chart.js defaults for dark mode
+          Chart.defaults.color = '#e2e2e2';
+          Chart.defaults.borderColor = '#3a3a4a';
+          
           powerChart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -153,7 +211,7 @@
                 {
                   label: 'Solar Production (W)',
                   data: [],
-                  borderColor: 'rgba(255, 193, 7, 1)',
+                  borderColor: 'rgba(255, 193, 7, 0.8)',
                   backgroundColor: 'rgba(255, 193, 7, 0.2)',
                   fill: true,
                   tension: 0.4
@@ -161,7 +219,7 @@
                 {
                   label: 'House Consumption (W)',
                   data: [],
-                  borderColor: 'rgba(220, 53, 69, 1)',
+                  borderColor: 'rgba(220, 53, 69, 0.8)',
                   backgroundColor: 'rgba(220, 53, 69, 0.2)',
                   fill: true,
                   tension: 0.4
@@ -169,7 +227,7 @@
                 {
                   label: 'Grid Export (W)',
                   data: [],
-                  borderColor: 'rgba(40, 167, 69, 1)',
+                  borderColor: 'rgba(40, 167, 69, 0.8)',
                   backgroundColor: 'rgba(40, 167, 69, 0.2)',
                   fill: true,
                   tension: 0.4
@@ -183,15 +241,37 @@
                 x: {
                   title: {
                     display: true,
-                    text: 'Time'
+                    text: 'Time',
+                    color: '#b0b0b0'
+                  },
+                  grid: {
+                    color: 'rgba(58, 58, 74, 0.5)'
                   }
                 },
                 y: {
                   title: {
                     display: true,
-                    text: 'Power (W)'
+                    text: 'Power (W)',
+                    color: '#b0b0b0'
                   },
-                  beginAtZero: true
+                  beginAtZero: true,
+                  grid: {
+                    color: 'rgba(58, 58, 74, 0.5)'
+                  }
+                }
+              },
+              plugins: {
+                legend: {
+                  labels: {
+                    color: '#e2e2e2'
+                  }
+                },
+                tooltip: {
+                  backgroundColor: 'rgba(42, 42, 58, 0.9)',
+                  titleColor: '#e2e2e2',
+                  bodyColor: '#e2e2e2',
+                  borderColor: '#3a3a4a',
+                  borderWidth: 1
                 }
               }
             }
@@ -367,7 +447,6 @@
           setInterval(loadHistoricalData, 5 * 60 * 1000);
         });
         
-        // Initialize data on page load
         window.onload = () => {
             fetchStatus();
             fetchInfo();
