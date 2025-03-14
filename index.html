@@ -1,456 +1,512 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solar Panel Controller</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ovládání solárního panelu</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root {
-            --bg-primary: #1e1e2e;
-            --bg-secondary: #252535;
-            --bg-tertiary: #2a2a3a;
-            --text-primary: #e2e2e2;
-            --text-secondary: #b0b0b0;
-            --accent-primary: #4d7dc1;
-            --accent-secondary: #355992;
-            --border-color: #3a3a4a;
-            --success-color: #2d8a46;
-            --warning-color: #c19b35;
-            --danger-color: #b33f3f;
-        }
-        
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            min-height: 100vh;
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-        }
-        
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px 0 50px 0;
-        }
-        
-        button {
-            margin: 10px 5px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            border: none;
-            border-radius: 4px;
-            color: var(--text-primary);
-            background-color: var(--accent-primary);
-            transition: background-color 0.2s;
-        }
-        
-        button:hover {
-            background-color: var(--accent-secondary);
-        }
-        
-        input {
-            margin: 10px 0;
-            padding: 10px;
-            font-size: 16px;
-            border-radius: 4px;
-            border: 1px solid var(--border-color);
-            background-color: var(--bg-secondary);
-            color: var(--text-primary);
-            outline: none;
-        }
-        
-        input:focus {
-            border-color: var(--accent-primary);
-        }
-        
-        .status-message {
-            margin: 10px 0;
-            font-size: 16px;
-            color: var(--danger-color);
-            min-height: 20px;
-        }
-        
-        .info-container {
-            margin: 20px 0;
-            padding: 15px;
-            border: 1px solid var(--border-color);
-            border-radius: 5px;
-            background-color: var(--bg-secondary);
-        }
-        
-        .info-item {
-            margin: 10px 0;
-            font-size: 16px;
-        }
-        
-        .card {
-            margin-top: 30px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.25);
-            background-color: var(--bg-secondary);
-        }
-        
-        .card-header {
-            background-color: var(--bg-tertiary);
-            padding: 10px 15px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .card-header h5 {
-            margin: 0;
-            font-size: 18px;
-            color: var(--text-primary);
-        }
-        
-        .card-body {
-            padding: 20px;
-            min-height: 300px;
-        }
-        
-        .btn-group {
-            margin-bottom: 15px;
-            display: flex;
-            gap: 5px;
-        }
-        
-        .btn {
-            padding: 8px 15px;
-            border-radius: 4px;
-            border: 1px solid transparent;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .btn-primary {
-            background-color: var(--accent-primary);
-            color: var(--text-primary);
-        }
-        
-        .btn-outline-primary {
-            background-color: transparent;
-            color: var(--accent-primary);
-            border-color: var(--accent-primary);
-        }
-        
-        .btn-outline-secondary {
-            background-color: transparent;
-            color: var(--text-secondary);
-            border-color: var(--text-secondary);
-        }
-        
-        .btn:hover {
-            filter: brightness(1.1);
-        }
-        
-        #powerChart {
-            margin-top: 20px;
-            height: 400px !important;
-            width: 100% !important;
-        }
-        
-        /* Chart.js dark mode styles */
-        canvas {
-            filter: brightness(0.9) contrast(0.85);
-        }
+      :root {
+        --bg-primary: #1e1e2e;
+        --bg-secondary: #252535;
+        --bg-tertiary: #2a2a3a;
+        --text-primary: #e2e2e2;
+        --text-secondary: #b0b0b0;
+        --accent-primary: #4d7dc1;
+        --accent-secondary: #355992;
+        --border-color: #3a3a4a;
+        --success-color: #2d8a46;
+        --warning-color: #c19b35;
+        --danger-color: #b33f3f;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        min-height: 100vh;
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+      }
+
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px 0 50px 0;
+      }
+
+      button {
+        margin: 10px 5px;
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        border: none;
+        border-radius: 4px;
+        color: var(--text-primary);
+        background-color: var(--accent-primary);
+        transition: background-color 0.2s;
+      }
+
+      button:hover {
+        background-color: var(--accent-secondary);
+      }
+
+      input {
+        margin: 10px 0;
+        padding: 10px;
+        font-size: 16px;
+        border-radius: 4px;
+        border: 1px solid var(--border-color);
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        outline: none;
+      }
+
+      input:focus {
+        border-color: var(--accent-primary);
+      }
+
+      .status-message {
+        margin: 10px 0;
+        font-size: 16px;
+        color: var(--danger-color);
+        min-height: 20px;
+      }
+
+      .info-container {
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+        background-color: var(--bg-secondary);
+      }
+
+      .info-item {
+        margin: 10px 0;
+        font-size: 16px;
+      }
+
+      .card {
+        margin-top: 30px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+        background-color: var(--bg-secondary);
+      }
+
+      .card-header {
+        background-color: var(--bg-tertiary);
+        padding: 10px 15px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .card-header h5 {
+        margin: 0;
+        font-size: 18px;
+        color: var(--text-primary);
+      }
+
+      .card-body {
+        padding: 20px;
+        min-height: 300px;
+      }
+
+      .btn-group {
+        margin-bottom: 15px;
+        display: flex;
+        gap: 5px;
+      }
+
+      .btn {
+        padding: 8px 15px;
+        border-radius: 4px;
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .btn-primary {
+        background-color: var(--accent-primary);
+        color: var(--text-primary);
+      }
+
+      .btn-outline-primary {
+        background-color: transparent;
+        color: var(--accent-primary);
+        border-color: var(--accent-primary);
+      }
+
+      .btn-outline-secondary {
+        background-color: transparent;
+        color: var(--text-secondary);
+        border-color: var(--text-secondary);
+      }
+
+      .btn:hover {
+        filter: brightness(1.1);
+      }
+
+      #powerChart {
+        margin-top: 20px;
+        height: 400px !important;
+        width: 100% !important;
+      }
+
+      /* Chart.js dark mode styles */
+      canvas {
+        filter: brightness(0.9) contrast(0.85);
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <h1>Solar Panel Controller</h1>
-        <p id="status">Status: Loading...</p>
-        <input type="password" id="password" placeholder="Enter password">
-        <button id="controlButton">Loading...</button>
-        <p id="statusMessage" class="status-message"></p>
-        <div class="info-container">
-            <p id="production" class="info-item">Production: --</p>
-            <p id="consumption" class="info-item">Consumption: --</p>
-            <p id="battery" class="info-item">Battery: --</p>
-            <p id="export" class="info-item">Export: --</p>
+      <h1>Solarní panely</h1>
+      <p id="status">Status: Načítání...</p>
+      <input type="password" id="password" placeholder="Zadejte heslo" />
+      <button id="controlButton">Načítání...</button>
+      <p id="statusMessage" class="status-message"></p>
+      <div class="info-container">
+        <p id="production" class="info-item">Výroba: --</p>
+        <p id="consumption" class="info-item">Spotřeba: --</p>
+        <p id="battery" class="info-item">Baterie: --</p>
+        <p id="export" class="info-item">Prodej/Nákup: --</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h5>Historické data</h5>
         </div>
-        
-        <div class="card">
-            <div class="card-header">
-              <h5>Historical Data</h5>
-            </div>
-            <div class="card-body">
-              <div class="btn-group">
-                <button type="button" class="btn btn-primary" id="viewDay">Today</button>
-                <button type="button" class="btn btn-outline-primary" id="viewWeek">Past Week</button>
-                <button type="button" class="btn btn-outline-secondary" id="downloadData">Download CSV</button>
-              </div>
-              <div style="height: 400px;">
-                <canvas id="powerChart"></canvas>
-              </div>
-            </div>
+        <div class="card-body">
+          <div class="btn-group">
+            <button type="button" class="btn btn-primary" id="viewDay">
+              Dnes
+            </button>
+            <button type="button" class="btn btn-outline-primary" id="viewWeek">
+              Minulý týden
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              id="downloadData"
+            >
+              Stáhnout CSV
+            </button>
+          </div>
+          <div style="height: 400px">
+            <canvas id="powerChart"></canvas>
+          </div>
         </div>
+      </div>
     </div>
 
     <script>
-        let powerChart;
-        let currentPeriod = 'day';
-        let chartData = [];
-        
-        function initChart() {
-          const ctx = document.getElementById('powerChart').getContext('2d');
-          
-          // Set Chart.js defaults for dark mode
-          Chart.defaults.color = '#e2e2e2';
-          Chart.defaults.borderColor = '#3a3a4a';
-          
-          powerChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-              labels: [],
-              datasets: [
-                {
-                  label: 'Solar Production (W)',
-                  data: [],
-                  borderColor: 'rgba(255, 193, 7, 0.8)',
-                  backgroundColor: 'rgba(255, 193, 7, 0.2)',
-                  fill: true,
-                  tension: 0.4
-                },
-                {
-                  label: 'House Consumption (W)',
-                  data: [],
-                  borderColor: 'rgba(220, 53, 69, 0.8)',
-                  backgroundColor: 'rgba(220, 53, 69, 0.2)',
-                  fill: true,
-                  tension: 0.4
-                },
-                {
-                  label: 'Grid Export (W)',
-                  data: [],
-                  borderColor: 'rgba(40, 167, 69, 0.8)',
-                  backgroundColor: 'rgba(40, 167, 69, 0.2)',
-                  fill: true,
-                  tension: 0.4
-                }
-              ]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              scales: {
-                x: {
-                  title: {
-                    display: true,
-                    text: 'Time',
-                    color: '#b0b0b0'
-                  },
-                  grid: {
-                    color: 'rgba(58, 58, 74, 0.5)'
-                  }
-                },
-                y: {
-                  title: {
-                    display: true,
-                    text: 'Power (W)',
-                    color: '#b0b0b0'
-                  },
-                  beginAtZero: true,
-                  grid: {
-                    color: 'rgba(58, 58, 74, 0.5)'
-                  }
-                }
+      let powerChart;
+      let currentPeriod = "day";
+      let chartData = [];
+
+      function initChart() {
+        const ctx = document.getElementById("powerChart").getContext("2d");
+
+        // Set Chart.js defaults for dark mode
+        Chart.defaults.color = "#e2e2e2";
+        Chart.defaults.borderColor = "#3a3a4a";
+
+        powerChart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: "Výroba (W)",
+                data: [],
+                borderColor: "rgba(255, 193, 7, 0.8)",
+                backgroundColor: "rgba(255, 193, 7, 0.2)",
+                fill: true,
+                tension: 0.4,
               },
-              plugins: {
-                legend: {
-                  labels: {
-                    color: '#e2e2e2'
-                  }
+              {
+                label: "Spotřeba (W)",
+                data: [],
+                borderColor: "rgba(220, 53, 69, 0.8)",
+                backgroundColor: "rgba(220, 53, 69, 0.2)",
+                fill: true,
+                tension: 0.4,
+              },
+              {
+                label: "Prodej/Nákup (W)",
+                data: [],
+                borderColor: "rgba(40, 167, 69, 0.8)",
+                backgroundColor: "rgba(40, 167, 69, 0.2)",
+                fill: true,
+                tension: 0.4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: {
+                title: {
+                  display: true,
+                  text: "Čas",
+                  color: "#b0b0b0",
                 },
-                tooltip: {
-                  backgroundColor: 'rgba(42, 42, 58, 0.9)',
-                  titleColor: '#e2e2e2',
-                  bodyColor: '#e2e2e2',
-                  borderColor: '#3a3a4a',
-                  borderWidth: 1
-                }
-              }
-            }
-          });
-          
-          loadHistoricalData();
-        }
-        
-        async function loadHistoricalData() {
-          try {
-            const response = await fetch(`/historical-data?period=${currentPeriod}`);
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            chartData = await response.json();
-            updateChart(chartData);
-          } catch (error) {
-            console.error('Error fetching historical data:', error);
+                grid: {
+                  color: "rgba(58, 58, 74, 0.5)",
+                },
+              },
+              y: {
+                title: {
+                  display: true,
+                  text: "Výkon (W)",
+                  color: "#b0b0b0",
+                },
+                beginAtZero: true,
+                grid: {
+                  color: "rgba(58, 58, 74, 0.5)",
+                },
+              },
+            },
+            plugins: {
+              legend: {
+                labels: {
+                  color: "#e2e2e2",
+                },
+              },
+              tooltip: {
+                backgroundColor: "rgba(42, 42, 58, 0.9)",
+                titleColor: "#e2e2e2",
+                bodyColor: "#e2e2e2",
+                borderColor: "#3a3a4a",
+                borderWidth: 1,
+              },
+            },
+          },
+        });
+
+        loadHistoricalData();
+      }
+
+      async function loadHistoricalData() {
+        try {
+          const response = await fetch(
+            `/historical-data?period=${currentPeriod}`
+          );
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
           }
+
+          chartData = await response.json();
+          updateChart(chartData);
+        } catch (error) {
+          console.error("Error fetching historical data:", error);
         }
-        
-        function updateChart(data) {
-          data.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-          
-          const formatTime = (timestamp) => {
-            const date = new Date(timestamp);
-            return currentPeriod === 'day' 
-              ? date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-              : date.toLocaleDateString([], {weekday: 'short'}) + ' ' + 
-                date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-          };
-          
-          const labels = data.map(entry => formatTime(entry.timestamp));
-          const ppvData = data.map(entry => entry.ppv || 0);
-          const consumptionData = data.map(entry => entry.house_consumption || 0);
-          const exportData = data.map(entry => entry.active_power || 0);
-          
-          powerChart.data.labels = labels;
-          powerChart.data.datasets[0].data = ppvData;
-          powerChart.data.datasets[1].data = consumptionData;
-          powerChart.data.datasets[2].data = exportData;
-          powerChart.update();
-        }
-        
-        function downloadCSV() {
-          if (!chartData || chartData.length === 0) {
-            alert('No data to download');
-            return;
-          }
-          
-          const headers = ['Timestamp', 'Solar Production (W)', 'House Consumption (W)', 'Grid Export (W)'];
-          let csvContent = headers.join(',') + '\n';
-          
-          chartData.forEach(entry => {
-            const row = [
-              entry.timestamp,
-              entry.ppv || 0,
-              entry.house_consumption || 0,
-              entry.active_power || 0
-            ];
-            csvContent += row.join(',') + '\n';
-          });
-          
-          const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-          const link = document.createElement('a');
-          const url = URL.createObjectURL(blob);
-          
-          const date = new Date();
-          const dateStr = date.toISOString().split('T')[0];
-          link.setAttribute('href', url);
-          link.setAttribute('download', `solar-data-${dateStr}.csv`);
-          link.style.visibility = 'hidden';
-          
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        }
-        
-        async function fetchInfo() {
-            try {
-                const response = await fetch('/info');
-                const data = await response.json();
-                document.getElementById('production').innerText = `Production: ${data.production} W`;
-                document.getElementById('consumption').innerText = `Consumption: ${data.consumption} W`;
-                document.getElementById('battery').innerText = `Battery: ${data.battery}%`;
-                document.getElementById('export').innerText = `Grid: ${data.export} W`;
-            } catch (error) {
-                console.error('Error fetching info:', error);
-            }
+      }
+
+      function updateChart(data) {
+        data.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+        const formatTime = (timestamp) => {
+          const date = new Date(timestamp);
+          return currentPeriod === "day"
+            ? date.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : date.toLocaleDateString([], { weekday: "short" }) +
+                " " +
+                date.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
+        };
+
+        const labels = data.map((entry) => formatTime(entry.timestamp));
+        const ppvData = data.map((entry) => entry.ppv || 0);
+        const consumptionData = data.map(
+          (entry) => entry.house_consumption || 0
+        );
+        const exportData = data.map((entry) => entry.active_power || 0);
+
+        powerChart.data.labels = labels;
+        powerChart.data.datasets[0].data = ppvData;
+        powerChart.data.datasets[1].data = consumptionData;
+        powerChart.data.datasets[2].data = exportData;
+        powerChart.update();
+      }
+
+      function downloadCSV() {
+        if (!chartData || chartData.length === 0) {
+          alert("Žádné data k stažení");
+          return;
         }
 
-        async function fetchStatus() {
-            try {
-                const response = await fetch('/status');
-                const data = await response.json();
-                document.getElementById('status').innerText = `Status: ${data.status}`;
-                const button = document.getElementById('controlButton');
-                if (data.status === 'On') {
-                    button.innerText = 'Stop Script';
-                    button.onclick = stopScript;
-                } else {
-                    button.innerText = 'Start Script';
-                    button.onclick = startScript;
-                }
-            } catch (error) {
-                console.error('Error fetching status:', error);
-            }
-        }
-    
-        async function startScript() {
-            try {
-                const password = document.getElementById('password').value;
-                const response = await fetch(`/start?pass=${password}`);
-                if (response.ok) {
-                    document.getElementById('statusMessage').innerText = 'Script started successfully';
-                } else if (response.status === 401) {
-                    const errorData = await response.json();
-                    document.getElementById('statusMessage').innerText = errorData.detail;
-                } else {
-                    document.getElementById('statusMessage').innerText = 'Failed to start script';
-                }
-                fetchStatus();
-            } catch (error) {
-                document.getElementById('statusMessage').innerText = 'Error starting script';
-                console.error('Error starting script:', error);
-            }
-        }
-    
-        async function stopScript() {
-            try {
-                const password = document.getElementById('password').value;
-                const response = await fetch(`/stop?pass=${password}`);
-                if (response.ok) {
-                    document.getElementById('statusMessage').innerText = 'Script stopped successfully';
-                } else if (response.status === 401) {
-                    const errorData = await response.json();
-                    document.getElementById('statusMessage').innerText = errorData.detail;
-                } else {
-                    document.getElementById('statusMessage').innerText = 'Failed to stop script';
-                }
-                fetchStatus();
-            } catch (error) {
-                document.getElementById('statusMessage').innerText = 'Error stopping script';
-                console.error('Error stopping script:', error);
-            }
-        }
-    
-        document.addEventListener('DOMContentLoaded', () => {
-          initChart();
-          
-          document.getElementById('viewDay').addEventListener('click', () => {
-            currentPeriod = 'day';
-            document.getElementById('viewDay').classList.add('btn-primary');
-            document.getElementById('viewDay').classList.remove('btn-outline-primary');
-            document.getElementById('viewWeek').classList.add('btn-outline-primary');
-            document.getElementById('viewWeek').classList.remove('btn-primary');
-            loadHistoricalData();
-          });
-          
-          document.getElementById('viewWeek').addEventListener('click', () => {
-            currentPeriod = 'week';
-            document.getElementById('viewWeek').classList.add('btn-primary');
-            document.getElementById('viewWeek').classList.remove('btn-outline-primary');
-            document.getElementById('viewDay').classList.add('btn-outline-primary');
-            document.getElementById('viewDay').classList.remove('btn-primary');
-            loadHistoricalData();
-          });
-          
-          document.getElementById('downloadData').addEventListener('click', downloadCSV);
-          
-          // every 5 mins refresh data
-          setInterval(loadHistoricalData, 5 * 60 * 1000);
-          setInterval(fetchInfo, 10 * 1000);
+        const headers = [
+          "Timestamp",
+          "Solar Production (W)",
+          "House Consumption (W)",
+          "Grid Export (W)",
+        ];
+        let csvContent = headers.join(",") + "\n";
+
+        chartData.forEach((entry) => {
+          const row = [
+            entry.timestamp,
+            entry.ppv || 0,
+            entry.house_consumption || 0,
+            entry.active_power || 0,
+          ];
+          csvContent += row.join(",") + "\n";
         });
-        
-        window.onload = () => {
-            fetchStatus();
-            fetchInfo();
-        };
+
+        const blob = new Blob([csvContent], {
+          type: "text/csv;charset=utf-8;",
+        });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+
+        const date = new Date();
+        const dateStr = date.toISOString().split("T")[0];
+        link.setAttribute("href", url);
+        link.setAttribute("download", `solar-data-${dateStr}.csv`);
+        link.style.visibility = "hidden";
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+
+      async function fetchInfo() {
+        try {
+          const response = await fetch("/info");
+          const data = await response.json();
+          document.getElementById(
+            "production"
+          ).innerText = `Výroba: ${data.production} W`;
+          document.getElementById(
+            "consumption"
+          ).innerText = `Spotřeba: ${data.consumption} W`;
+          document.getElementById(
+            "battery"
+          ).innerText = `Baterie: ${data.battery}%`;
+          document.getElementById(
+            "export"
+          ).innerText = `Prodej/Nákup: ${data.export} W`;
+        } catch (error) {
+          console.error("Error fetching info:", error);
+        }
+      }
+
+      async function fetchStatus() {
+        try {
+          const response = await fetch("/status");
+          const data = await response.json();
+          document.getElementById(
+            "status"
+          ).innerText = `Status: ${data.status}`;
+          const button = document.getElementById("controlButton");
+          if (data.status === "On") {
+            button.innerText = "Pozastavit program";
+            button.onclick = stopScript;
+          } else {
+            button.innerText = "SPustit program";
+            button.onclick = startScript;
+          }
+        } catch (error) {
+          console.error("Error fetching status:", error);
+        }
+      }
+
+      async function startScript() {
+        try {
+          const password = document.getElementById("password").value;
+          const response = await fetch(`/start?pass=${password}`);
+          if (response.ok) {
+            document.getElementById("statusMessage").innerText =
+              "Program byl úspěšně spuštěn!";
+          } else if (response.status === 401) {
+            const errorData = await response.json();
+            document.getElementById("statusMessage").innerText =
+              errorData.detail;
+          } else {
+            document.getElementById("statusMessage").innerText =
+              "Chyba při zapínání programu";
+          }
+          fetchStatus();
+        } catch (error) {
+          document.getElementById("statusMessage").innerText =
+            "Chyba při zapínání programu";
+          console.error("Error starting script:", error);
+        }
+      }
+
+      async function stopScript() {
+        try {
+          const password = document.getElementById("password").value;
+          const response = await fetch(`/stop?pass=${password}`);
+          if (response.ok) {
+            document.getElementById("statusMessage").innerText =
+              "Program úspěšně pozastaven!";
+          } else if (response.status === 401) {
+            const errorData = await response.json();
+            document.getElementById("statusMessage").innerText =
+              errorData.detail;
+          } else {
+            document.getElementById("statusMessage").innerText =
+              "Chyba při zastavování programu";
+          }
+          fetchStatus();
+        } catch (error) {
+          document.getElementById("statusMessage").innerText =
+            "Chyba při zastavování programu";
+          console.error("Error stopping script:", error);
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        initChart();
+
+        document.getElementById("viewDay").addEventListener("click", () => {
+          currentPeriod = "day";
+          document.getElementById("viewDay").classList.add("btn-primary");
+          document
+            .getElementById("viewDay")
+            .classList.remove("btn-outline-primary");
+          document
+            .getElementById("viewWeek")
+            .classList.add("btn-outline-primary");
+          document.getElementById("viewWeek").classList.remove("btn-primary");
+          loadHistoricalData();
+        });
+
+        document.getElementById("viewWeek").addEventListener("click", () => {
+          currentPeriod = "week";
+          document.getElementById("viewWeek").classList.add("btn-primary");
+          document
+            .getElementById("viewWeek")
+            .classList.remove("btn-outline-primary");
+          document
+            .getElementById("viewDay")
+            .classList.add("btn-outline-primary");
+          document.getElementById("viewDay").classList.remove("btn-primary");
+          loadHistoricalData();
+        });
+
+        document
+          .getElementById("downloadData")
+          .addEventListener("click", downloadCSV);
+
+        // every 5 mins refresh data
+        setInterval(loadHistoricalData, 5 * 60 * 1000);
+        setInterval(fetchInfo, 10 * 1000);
+      });
+
+      window.onload = () => {
+        fetchStatus();
+        fetchInfo();
+      };
     </script>
-</body>
+  </body>
 </html>
