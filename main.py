@@ -348,7 +348,7 @@ async def main():
         await controller.inverter.write_setting("grid_export", 1)
         await controller.inverter.write_setting("grid_export_limit", config.max_export_set)
         
-    for sig in (signal.SIGTERM, signal.SIGINT):
+    for sig in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
         loop.add_signal_handler(
             sig,
             lambda s=sig: asyncio.create_task(handle_shutdown(s))
