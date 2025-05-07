@@ -21,10 +21,12 @@ class WebServer:
 
     async def get_info(self):
         data = await self.controller.get_data()
+        enabled = await self.controller.inverter.read_setting("grid_export")
         return {"production": data["ppv"],
                "consumption": data["house_consumption"],
                "battery": data["battery_soc"],
-               "export": data["active_power"]
+               "export": data["active_power"],
+                "enabled": enabled,
         }
     def index_page(self):
         return FileResponse('index.html')

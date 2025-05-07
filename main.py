@@ -345,6 +345,8 @@ async def main():
         controller.logManager.log(f"Received signal {sig}")
         cleanup(server)
         controller.logManager.log("Cleanup complete")
+        await controller.inverter.write_setting("grid_export", 1)
+        await controller.inverter.write_setting("grid_export_limit", config.max_export_set)
         
     for sig in (signal.SIGTERM, signal.SIGINT):
         loop.add_signal_handler(
@@ -357,6 +359,8 @@ async def main():
     finally:
         await cleanup(server)
         controller.logManager.log("Cleanup complete")
+        await controller.inverter.write_setting("grid_export", 1)
+        await controller.inverter.write_setting("grid_export_limit", config.max_export_set)
         
     print("program ended")
 
