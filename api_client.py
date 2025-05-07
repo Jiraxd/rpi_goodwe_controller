@@ -1,6 +1,6 @@
 import httpx
 from decorators import error_handler
-from logger import LoggerCustom
+from loggerCustom import LoggerCustom
 
 class ApiClient:
     def __init__(self, logManager: LoggerCustom):

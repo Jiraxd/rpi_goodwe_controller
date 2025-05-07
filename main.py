@@ -6,7 +6,7 @@ import utils
 from datetime import datetime, timedelta
 from display_manager import LCDManager 
 from crons import CronManager
-from logger import LoggerCustom
+from loggerCustom import LoggerCustom
 from tapo_client import TapoClient
 from api_client import ApiClient
 from config import config

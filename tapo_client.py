@@ -2,7 +2,7 @@ from tapo import ApiClient
 import os
 
 from decorators import error_handler
-from logger import LoggerCustom
+from loggerCustom import LoggerCustom
 
 class TapoClient:
     def __init__(self, logManager: LoggerCustom):

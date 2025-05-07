@@ -1,5 +1,5 @@
 import goodwe
-from logger import LoggerCustom
+from loggerCustom import LoggerCustom
 from config import config
 
 async def disable_grid_export(inverter: goodwe.Inverter, logManager : LoggerCustom):

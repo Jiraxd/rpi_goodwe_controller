@@ -1,6 +1,6 @@
 import functools
 import traceback
-from logger import LoggerCustom
+from loggerCustom import LoggerCustom
 import asyncio
 
 def error_handler(func):
