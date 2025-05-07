@@ -39,9 +39,9 @@ class WebServer:
         pwd = request.query_params.get("pass")
         if pwd != password:
             raise HTTPException(status_code=401, detail="Invalid password")
+        self.controller.status = "Off"
         await self.controller.inverter.write_setting("grid_export", 1)
         await self.controller.inverter.write_setting("grid_export_limit", config.max_export_set)
-        self.controller.status = "Off"
         return {"status": "Stopped script!"}
 
     async def start_script(self, request: Request):
