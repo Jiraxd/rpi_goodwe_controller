@@ -22,8 +22,9 @@ async def enable_grid_export(inverter: goodwe.Inverter, logManager : LoggerCusto
 async def disable_grid_limit(inverter: goodwe.Inverter, logManager : LoggerCustom):
     logManager.log("disabling limit")
     return
-    
-    inverter.write_setting("grid_export", 0)
+    enabled = await inverter.read_setting("grid_export")
+    if(enabled != 0):
+        inverter.write_setting("grid_export", 0)
 
 async def enable_grid_limit(inverter: goodwe.Inverter, logManager : LoggerCustom):
     logManager.log("enabling limit")
