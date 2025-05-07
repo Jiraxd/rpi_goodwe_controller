@@ -1,3 +1,4 @@
+import config
 from starlette.responses import FileResponse 
 from fastapi import FastAPI, APIRouter, Request, HTTPException
 import uvicorn
@@ -38,6 +39,8 @@ class WebServer:
         pwd = request.query_params.get("pass")
         if pwd != password:
             raise HTTPException(status_code=401, detail="Invalid password")
+        await self.controller.inverter.write_setting("grid_export", 1)
+        await self.controller.inverter.write_setting("grid_export_limit", config.max_export_set)
         self.controller.status = "Off"
         return {"status": "Stopped script!"}
 
