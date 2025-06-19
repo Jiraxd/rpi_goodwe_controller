@@ -21,7 +21,7 @@ class CronManager:
         pycron.stop()
     
 
-@pycron.cron("* * * * * */2") 
+@pycron.cron("* * * * * */3") 
 async def getDataAndCheck(timestamp: datetime):
     logManager.log("Running cron getDataAndCheck()")
     data = await controller.get_data()
