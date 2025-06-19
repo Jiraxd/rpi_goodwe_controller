@@ -1,5 +1,6 @@
 import asyncio
 import json
+from typing import Literal
 import goodwe
 from decorators import error_handler
 import utils
@@ -43,7 +44,8 @@ async def cleanup(server):
 
 class MainController:
     def __init__(self):
-        self.status: "Off" | "On" = "Off" 
+        self.status: Literal["Off", "On"] = "Off"
+        self.cachedData = None
         self.inverter = None
         self.lcdmanager = None 
         self.cronManager = None
@@ -120,19 +122,23 @@ class MainController:
     # Called by cron from cros.py
     # Gets latest data from inverter and prints it to LCD display
     # This also returns the fetched data back to the cron, which then calls check_grid_limit
-    async def get_data_and_write_to_lcd(self):
-        data = await self.get_runtime_data(False)
+    async def write_to_lcd(self):
+        data = self.cachedData
+        if data is None:
+            return
         self.lcdmanager.write_lines([
             f"Status: {self.status}", 
             f"Production: {str(data.get('ppv', 0))}W",
             f"Export: {str(data.get('active_power', 0))}W", 
             f"House: {str(data.get('house_consumption', 0))}W"
         ])
-        return data
+       
 
     # Calls method to get data without printing the data it got
     async def get_data(self):
-        return await self.get_runtime_data(False)
+        data = await self.get_runtime_data(False)
+        self.cachedData = data
+        return data
 
     # Called by cron from crons.py
     # Checks if we're producting more than allowed, if yes, enables limit and sets it to maximum export allowed
@@ -229,7 +235,10 @@ class MainController:
 
 
         gridEnabled = await self.inverter.read_setting("grid_export")
-        data = await self.get_data()
+        data = self.cachedData
+        if data is None:
+            self.logManager.log("Cached data is None, cannot continue with price check")
+            return
         ppv = data.get("ppv", 0)
 
         # If price is lower than 0, we need to disable export
@@ -260,7 +269,7 @@ class MainController:
 
 
         # Enabling or disabling selling also changes the limit, we need to make sure it does not override each other
-        if(export > config.max_export):
+        if(ppv > config.max_export):
             self.logManager.log("Could not continue with price check, the export is more than max_export limit")
             return
 

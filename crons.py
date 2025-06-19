@@ -21,23 +21,27 @@ class CronManager:
         pycron.stop()
     
 
-
-
-@pycron.cron("* * * * * */3") 
-async def getDataAndWriteToLCD(timestamp: datetime):
-    logManager.log("Running cron getDataAndWriteToLCD()")
-    data = await controller.get_data_and_write_to_lcd()
+@pycron.cron("* * * * * */2") 
+async def getDataAndCheck(timestamp: datetime):
+    logManager.log("Running cron getDataAndCheck()")
+    data = await controller.get_data()
     if(controller.status == "Off"):
         return  
     await controller.check_grid_limit(data)
-    logManager.log("Cron getDataAndWriteToLCD() finished running!")
+    logManager.log("Cron getDataAndCheck() finished running!")
+
+@pycron.cron("* * * * * */10") 
+async def writeToLCD(timestamp: datetime):
+    logManager.log("Running cron writeToLCD()")
+    await controller.write_to_lcd()
+    logManager.log("Cron writeToLCD() finished running!")
 
 #@pycron.cron("* * * * * */30")
 async def checkWaterHeating(timestamp: datetime):  
     if(controller.status == "Off"):
         return 
     logManager.log("Running cron checkWaterHeating()")
-    data = await controller.get_data()
+    data = controller.cachedData
     await controller.check_water_heating(data)
     logManager.log("Cron checkWaterHeating() finished running!")
         
@@ -55,7 +59,7 @@ async def storeHistoricalData(timestamp: datetime):
     logManager.log("Running cron storeHistoricalData()")
     
     try:
-        full_data = await controller.get_data()
+        full_data = controller.cachedData
         if full_data:
             data = {
                 "timestamp": timestamp.isoformat(),
