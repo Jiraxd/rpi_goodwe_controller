@@ -135,10 +135,10 @@ class MainController:
         return await self.get_runtime_data(False)
 
     # Called by cron from crons.py
-    # Checks if we're exporting more than allowed, if yes, enables limit and sets it to maximum export allowed
-    # If not, disables grid export limit (Inverter doesn't take that much energz from grid if limit is disabled)
+    # Checks if we're producting more than allowed, if yes, enables limit and sets it to maximum export allowed
+    # If not, disables grid export limit (Inverter doesn't take that much energy from grid if limit is disabled)
     async def check_grid_limit(self, data):
-        export = data.get("active_power", 0)
+        ppv = data.get("ppv", 0)
 
         enabled = await self.inverter.read_setting("grid_export")
 
@@ -149,11 +149,11 @@ class MainController:
             return
 
 
-        self.logManager.log(f"Export: {export}")
+        self.logManager.log(f"Production: {ppv}")
         self.logManager.log(f"Grid export enabled: {enabled}")
         self.logManager.log(f"Max export: {config.max_export}")
         # If we're exporting more than the max limit (i suggest 200 less than actual limit) we enable the limit
-        if(export > config.max_export):
+        if(ppv > config.max_export):
             await utils.enable_grid_limit(self.inverter, self.logManager)
         else:
             # No need to deactivate the limit everytime the solar panel output changes
@@ -230,7 +230,7 @@ class MainController:
 
         gridEnabled = await self.inverter.read_setting("grid_export")
         data = await self.get_data()
-        export = data.get("active_power", 0)
+        ppv = data.get("ppv", 0)
 
         # If price is lower than 0, we need to disable export
         if(calculatedPrice < 0):
@@ -245,7 +245,7 @@ class MainController:
             self.priceLowerThanZero = False
 
             # Enables selling while also enabling or disabling export limit based on the current export
-            if(export > config.max_export):
+            if(ppv > config.max_export):
                 utils.enable_grid_limit(self.inverter, self.logManager)
             else:
                 utils.disable_grid_limit(self.inverter, self.logManager)
