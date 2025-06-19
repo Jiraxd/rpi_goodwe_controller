@@ -23,7 +23,7 @@ class CronManager:
 
 
 
-@pycron.cron("* * * * * */15") 
+@pycron.cron("* * * * * */3") 
 async def getDataAndWriteToLCD(timestamp: datetime):
     if(controller.status == "Off"):
         return  
