@@ -52,8 +52,6 @@ async def checkPrice(timestamp: datetime):
 @pycron.cron("*/30 * * * *")
 @error_handler
 async def storeHistoricalData(timestamp: datetime):
-    if controller.status == "Off":
-        return
     logManager.log("Running cron storeHistoricalData()")
     
     try:
