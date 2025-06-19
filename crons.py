@@ -23,7 +23,7 @@ class CronManager:
 
 
 
-@pycron.cron("* * * * * */2") 
+@pycron.cron("* * * * * */3") 
 async def getDataAndWriteToLCD(timestamp: datetime):
     logManager.log("Running cron getDataAndWriteToLCD()")
     data = await controller.get_data_and_write_to_lcd()
