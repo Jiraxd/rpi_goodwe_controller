@@ -43,7 +43,7 @@ async def cleanup(server):
 
 class MainController:
     def __init__(self):
-        self.status: "Off" | "On" = "On" 
+        self.status: "Off" | "On" = "Off" 
         self.inverter = None
         self.lcdmanager = None 
         self.cronManager = None
@@ -123,7 +123,7 @@ class MainController:
     async def get_data_and_write_to_lcd(self):
         data = await self.get_runtime_data(False)
         self.lcdmanager.write_lines([
-            "Connected!", 
+            f"Enabled: {self.status}", 
             f"Production: {str(data.get('ppv', 0))}W",
             f"Export: {str(data.get('active_power', 0))}W", 
             f"House: {str(data.get('house_consumption', 0))}W"
