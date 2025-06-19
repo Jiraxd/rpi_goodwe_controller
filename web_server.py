@@ -1,4 +1,4 @@
-import config
+from config import config
 from starlette.responses import FileResponse 
 from fastapi import FastAPI, APIRouter, Request, HTTPException
 import uvicorn
