@@ -25,10 +25,10 @@ class CronManager:
 
 @pycron.cron("* * * * * */2") 
 async def getDataAndWriteToLCD(timestamp: datetime):
-    if(controller.status == "Off"):
-        return  
     logManager.log("Running cron getDataAndWriteToLCD()")
     data = await controller.get_data_and_write_to_lcd()
+     if(controller.status == "Off"):
+        return  
     await controller.check_grid_limit(data)
     logManager.log("Cron getDataAndWriteToLCD() finished running!")
 
