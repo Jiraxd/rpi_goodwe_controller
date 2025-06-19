@@ -57,8 +57,8 @@ class WebServer:
 
     def run(self, host="0.0.0.0", port=8000):
         print(f"Starting server on {host}:{port}")
-        config = uvicorn.Config(self.app, host=host, port=port)
-        server = uvicorn.Server(config)
+        configUvicorn = uvicorn.Config(self.app, host=host, port=port)
+        server = uvicorn.Server(configUvicorn)
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.run_until_complete(server.serve())
