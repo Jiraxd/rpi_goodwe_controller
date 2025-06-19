@@ -21,7 +21,7 @@ class WebServer:
         self.shutdown_event = threading.Event()
 
     async def get_info(self):
-        data = await self.controller.get_data()
+        data = self.controller.cachedData
         enabled = await self.controller.inverter.read_setting("grid_export")
         return {"production": data["ppv"],
                "consumption": data["house_consumption"],
